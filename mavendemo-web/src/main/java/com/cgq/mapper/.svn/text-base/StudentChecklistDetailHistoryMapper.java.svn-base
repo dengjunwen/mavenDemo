@@ -1,0 +1,13 @@
+package com.cgq.mapper;
+
+import java.util.List;
+
+import com.cgq.model.StudentChecklistDetailHistory;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface StudentChecklistDetailHistoryMapper extends Mapper<StudentChecklistDetailHistory>{
+
+	List<StudentChecklistDetailHistory> selectStudentTodayHistory(String studentid);
+
+}

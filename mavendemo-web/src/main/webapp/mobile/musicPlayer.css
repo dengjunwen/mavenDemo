@@ -1,0 +1,24 @@
+.panel.lyric{
+  color: #ffffff;
+  .lyric_wrap{
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    width: 100%;
+    top: 15px;
+    overflow: hidden;
+    #lyric{
+      padding: 5px;
+      -webkit-transition:500ms ease-out;
+      li{
+        text-align: center;
+        font-size: 15px;
+        padding: 5px 0;
+        &.on{
+          font-weight: bold;
+          color: #36a3e1;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cgq.mapper.XzqhMapper">
+
+	<select id="queryXzqh" resultType="Xzqh" parameterType="Xzqh">
+ 		SELECT  id,xzqhdm,xzqhmc,xzqhbm,sjxzqhdm,sjxzqhmc,cjry,cjsj,ischild	FROM t_xzqh WHERE 1=1 
+ 			<if test="id !=null and id !='' ">
+ 				and id =  ${id}
+ 			</if>
+ 		  	<if test="sjxzqhdm !=null and sjxzqhdm !='' ">
+ 				and sjxzqhdm = #{sjxzqhdm}
+ 			</if>
+ 			<if test="xzqhdm !=null and xzqhdm !='' ">
+ 				and xzqhdm = #{xzqhdm}
+ 			</if>
+ 			order by xzqhdm asc
+ 	</select>
+ 	
+ 	<select id="queryOneXzqh" resultType="Xzqh" parameterType="Xzqh">
+ 		SELECT  id,xzqhdm,xzqhmc,xzqhbm,sjxzqhdm,sjxzqhmc,cjry,cjsj,ischild	FROM t_xzqh WHERE 1=1 
+ 			<if test="id !=null and id !='' ">
+ 				and id =  #{id}
+ 			</if>
+ 		  	<if test="sjxzqhdm !=null and sjxzqhdm !='' ">
+ 				and sjxzqhdm = #{sjxzqhdm}
+ 			</if>
+ 			<if test="xzqhdm !=null and xzqhdm !='' ">
+ 				and xzqhdm = #{xzqhdm}
+ 			</if>
+ 	</select>
+
+	<insert id="insertXzqh"  parameterType="map">
+		insert t_xzqh(xzqhdm,xzqhmc,xzqhbm,sjxzqhdm,sjxzqhmc,cjry,cjsj,ischild)
+		values( #{xzqhdm},#{xzqhmc},#{xzqhbm},#{sjxzqhdm},#{sjxzqhmc},#{cjry},current_timestamp,#{ischild})
+ 	</insert>
+ 	
+ 	<delete id="deleteXzqh" parameterType="Xzqh">
+ 		delete from t_xzqh  where 1=1 
+ 		    <if test="id !=null and id !='' ">
+ 				and id =  ${id}
+ 			</if>
+ 		  	<if test="sjxzqhdm !=null and sjxzqhdm !='' ">
+ 				and sjxzqhdm = #{sjxzqhdm}
+ 			</if>
+ 			<if test="xzqhdm !=null and xzqhdm !='' ">
+ 				and xzqhdm = #{xzqhdm}
+ 			</if>
+ 	</delete>
+ 	
+ 	<update id="updateXzqh" parameterType="map">
+ 		update t_xzqh t set t.xzqhdm =#{xzqhdm},xzqhmc =#{xzqhmc},xzqhbm =#{xzqhbm},sjxzqhdm =#{sjxzqhdm},sjxzqhmc =#{sjxzqhmc}
+ 		where t.id =${id}
+ 	</update>
+ 	
+ 	<select id ="querySC"  resultType="WxXzqh" >
+ 		select distinct(xzqh_name),xzqh_id,parent,belong from sc_wxxzqh t group by xzqh_name order by t.xzqh_id asc
+ 	</select>
+ 	
+ 	<select id ="queryOneSC"  resultType="WxXzqh" parameterType="map">
+ 		select xzqh_name,xzqh_id,parent,belong from sc_wxxzqh t where t.xzqh_id =#{xzqh_id}
+ 	</select>
+ 	
+ 	<select id ="queryScArea" resultType="WxXzqh" parameterType="map">
+ 		select xzqh_id as id,xzqh_name,xzqh_fullname from sc_area t where t.xzqh_id =#{xzqh_id}
+ 	</select>
+ 	
+ 	<update id="updateXzqh1" parameterType="map">
+ 		update t_xzqh t set 
+ 		<if test="ischild !=null and ischild !='' ">
+ 			ischild =#{ischild}
+ 		</if>
+ 		<if test="sjxzqhmc !=null and sjxzqhmc !='' ">
+ 			sjxzqhmc=#{sjxzqhmc}
+ 		</if>
+ 		where  xzqhdm = #{xzqhdm}
+ 	</update>
+ 	
+</mapper>

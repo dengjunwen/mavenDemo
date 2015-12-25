@@ -1,0 +1,89 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.StudentTaskHistory;
+
+/**
+ * 学生当前任务状态
+ * @author zhangbin1
+ *
+ */
+public interface StudentTaskHistoryService {
+	
+	
+	
+	/**
+	 * 新增任务历史记录，方便记录任务当前状态
+	 * @param history
+	 * @throws Exception
+	 */
+	public void addTaskHistory(StudentTaskHistory history)throws Exception;
+
+	
+	/**
+	 * 新增直播任务历史记录，方便记录任务当前状态
+	 * @param history
+	 * @throws Exception
+	 */
+	public void addLiveTaskHistory(StudentTaskHistory history)throws Exception;
+	
+	/**
+	 * 更新任务历史记录
+	 * @param history
+	 * @throws Exception
+	 */
+	public void updateTaskHistory(StudentTaskHistory history) throws Exception;
+	
+	/**
+	 *  获取学生任务往期回顾 
+	 */
+	public List<StudentTaskHistory> queryStudentTaskHistoryByUserId(Integer userId);
+
+	/**
+	 * 查询学生未完成的任务进行到第几步
+	 * @param userid
+	 * @param taskid
+	 * @return
+	 */
+	public StudentTaskHistory queryStudentUndoneTaskHistory(Integer userid, Integer taskid);
+
+	void endLiveTaskHistory(StudentTaskHistory history) throws Exception;
+	
+	/**
+	 * 根据用户ID和任务ID查询历史记录
+	 * @param userid
+	 * @param taskid
+	 * @return
+	 */
+	public StudentTaskHistory  queryHistoryByUserIdAndTaskId(Integer userid,Integer taskid);
+
+	/**
+	 * 查询所有的历史记录
+	 * @return
+	 */
+	public List<StudentTaskHistory> listAll();
+
+
+	/**
+	 * 删除相关的任务记录
+	 * @param historyid
+	 */
+	public void delStudentTaskHistory(Integer historyid);
+
+	/**
+	 * 删除相关的任务记录
+	 * @param historyid
+	 */
+	public void delStudentTaskHistory(Integer studentId,Integer taskId,Integer pageIndex);
+	
+	
+	/**判断学生是否可以进入下一页
+	 * @param taskid
+	 * @param index
+	 * @param userid
+	 * @return
+	 */
+	public boolean jumpIntoNextPage(Integer taskid, Integer index,Integer userid);
+	
+}

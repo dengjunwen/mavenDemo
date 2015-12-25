@@ -1,0 +1,49 @@
+package com.cgq.service;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.jpedal.exception.PdfException;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.cgq.model.Page;
+import com.cgq.model.Resource;
+
+public interface ResourceService {
+	
+	public  Resource getResourceById(Integer id);
+
+	/**
+	 * 上传资源 返回资源ID
+	 * @param request
+	 * @param source 来源 0:老师课件 1:用户头像 2:学生上传
+	 * @return
+	 * @throws IOException
+	 */
+	public  List<Integer>  uploadFile(MultipartHttpServletRequest request,Integer source) throws IOException;
+
+	/**
+	 * 将PDF转换为图片并保存
+	 * @param request
+	 * @param source 来源 0:老师课件 1:用户头像 2:学生上传
+	 * @return
+	 * @throws PdfException 
+	 * @throws IOException 
+	 */
+	public List<Integer> savePDFToImg(Integer pdfResourceID, Integer integer,int width,int height) throws IOException, PdfException;
+
+	public  Resource  uploadFileResouce(String filedata,Integer source,String filetype) throws  Exception;
+
+	public  Resource  uploadFileResouce(MultipartHttpServletRequest request,Integer source) throws IOException;
+	
+	
+	public List<Resource> queryResourceByIds(List<Page> pages,Integer resourceType);
+	
+	
+	public List<Resource> queryResource(Map<String,Object> map);
+
+	Resource uploadFileResouce(byte[] filedata, Integer source, String filetype) throws Exception;
+	
+	
+}

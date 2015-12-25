@@ -1,0 +1,156 @@
+package com.cgq.controller;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.cgq.service.ClassesService;
+
+/**
+ * 班级业务类
+ * 
+ * @author wangjie
+ *
+ */
+@Controller
+public class ClassesController {
+	Logger LOG = LoggerFactory.getLogger(ClassesController.class);
+
+	@Autowired
+	private ClassesService classesService;
+
+	@RequestMapping("/manage/classes")
+	public Object index(Model model, HttpServletRequest request) {
+		return "classes";
+	}
+
+	@ResponseBody
+	@RequestMapping("/manage/classes/list")
+	public Object list(Model model, HttpServletRequest request) {
+		try {
+			return JSON.toJSONString(classesService.listAll());
+		} catch (Exception e) {
+			// TODO: handle exception
+			return "exception";
+		}
+	}
+
+	/**
+	 * 删除班级数据
+	 * 
+	 * @param model
+	 * @param id
+	 * @param request
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/manage/classes/deldata")
+	public Object deldata(Model model, @RequestParam("id") int id, HttpServletRequest request) {
+		try {
+			classesService.delById(id);
+			return "success";
+		} catch (Exception e) {
+			// TODO: handle exception
+			return "exception";
+		}
+
+	}
+
+	/**
+	 * 添加班级数据
+	 * 
+	 * @param model
+	 * @param className
+	 * @param classLevel
+	 * @param companyTeacherId
+	 * @param request
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/manage/classes/addData")
+	public Object addData(Model model, @RequestParam("className") String className,
+			@RequestParam("classLevel") String classLevel, @RequestParam("companyTeacherId") String companyTeacherId,
+			HttpServletRequest request) {
+		try {
+			classesService.add(className, classLevel, companyTeacherId);
+			return "success";
+		} catch (Exception e) {
+			// TODO: handle exception
+			return "exception";
+		}
+	}
+
+	/**
+	 * 跳转班级学生列表页
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/manage/classes/configStudent")
+	public ModelAndView configStudent(@RequestParam("classid") String classid, HttpServletResponse response) {
+		ModelAndView modelAndView = new ModelAndView("classesConfigStudent");
+		modelAndView.addObject("classid", classid);
+		modelAndView.addObject("classname", classesService.querytById(classid).getClassName());
+		modelAndView.addObject("students", JSON.toJSONString(classesService.listStudentsInClass(classid)));
+		return modelAndView;
+	}
+
+	/**
+	 * 跳转班级课程配置页
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/manage/classes/configCourse")
+	public ModelAndView configCourse(@RequestParam("classid") String classid, HttpServletResponse response){
+		ModelAndView modelAndView = new ModelAndView("classesConfigCourse");
+		modelAndView.addObject("classinfo", classesService.querytById(classid));
+		return modelAndView;
+	}
+	
+	/**
+	 * 将学生从班级中移除
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/manage/classes/rmStudentFromClass")
+	@ResponseBody
+	public String rmStudentFromClass(@RequestParam("classid") int classid,
+			@RequestParam("studentid") int studentid) {
+		try {
+			classesService.rmStudentFromClass(classid, studentid);
+			return "success";
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString());
+			return "fail";
+		}
+	}
+	
+	/**
+	 * 将学生分配到班级
+	 * @return
+	 */
+	@RequestMapping("/manage/classes/addStudentToClass")
+	@ResponseBody
+	public String addStudentToClass(@RequestParam("studentids") String studentids,
+			@RequestParam("classid") String classid){
+		try {
+			classesService.addStudentToClass(studentids,classid);
+			return "success";
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString());
+			return "fail";
+		}
+	}
+	
+}

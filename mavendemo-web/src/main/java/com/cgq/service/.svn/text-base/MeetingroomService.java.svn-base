@@ -1,0 +1,57 @@
+package com.cgq.service;
+
+import com.cgq.model.LiveCourse;
+
+public interface MeetingroomService {
+
+	/**
+	 * 更改直播中一个学生的属性
+	 * @param studentid
+	 * @param seat
+	 * @param groupid
+	 * @param handstatus
+	 * @param micstatus
+	 * @param isonline
+	 * @param energy 正数是加 负数是减
+	 */
+	void studentStatusChange(String courseid,Integer studentid, String seat, String groupid, Integer handstatus, Integer micstatus,
+			Integer isonline, Integer energy);
+
+	/**
+	 * 根据courseid获取正在直播的课程实例
+	 * @param courseid
+	 * @return
+	 * @throws Exception 
+	 */
+	LiveCourse getLiveCourse(String courseid) throws Exception;
+	
+	/**
+	 * 根据courseid获取新的直播课程实例
+	 * @param courseid
+	 * @return
+	 * @throws Exception 
+	 */
+	LiveCourse getLiveInstanceCourse(String courseid) throws Exception;
+
+	/**
+	 * 更改直播中一个小组的实例
+	 * @param groupid
+	 * @param groupscore
+	 * @param status
+	 */
+	void groupStatusChange(String courseid,String groupid, String groupscore, String status);
+
+	/**
+	 * 结束直播，回收直播课程实例
+	 * @param courseid
+	 * @throws Exception 
+	 */
+	void endlivecourse(String courseid) throws Exception;
+
+	/**
+	 * 直播室状态更改接口
+	 * @param courseid
+	 * @param isHeadPic
+	 */
+	void meetingroomstatuschange(String courseid, Integer isHeadPic);
+}

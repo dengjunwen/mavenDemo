@@ -1,0 +1,14 @@
+package com.cgq.service;
+
+import com.cgq.model.UserFeedback;
+
+public interface UserFeedbackService {
+	
+		/**新增用户反馈
+		 * @param userFeedback
+		 * @throws Exception
+		 */
+		void	addUserFeedback(UserFeedback userFeedback ) throws Exception;
+	
+	
+}

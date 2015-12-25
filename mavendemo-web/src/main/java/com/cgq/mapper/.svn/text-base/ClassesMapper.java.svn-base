@@ -1,0 +1,10 @@
+package com.cgq.mapper;
+
+import java.util.List;
+
+import com.cgq.model.Classes;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface ClassesMapper extends Mapper<Classes>{
+}

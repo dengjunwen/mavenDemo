@@ -1,0 +1,9 @@
+package com.cgq.mapper;
+
+import com.cgq.model.Reward;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface RewardMapper extends Mapper<Reward> {
+
+}

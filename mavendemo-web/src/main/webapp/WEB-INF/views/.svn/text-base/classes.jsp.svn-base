@@ -1,0 +1,298 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>Cloud Admin | Dynamic Tables</title>
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="description" content="">
+<meta name="author" content="">
+<!-- STYLESHEETS -->
+<!--[if lt IE 9]><script src="js/flot/excanvas.min.js"></script><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><script src="http://css3-mediaqueries-js.googlecode.com/svn/trunk/css3-mediaqueries.js"></script><![endif]-->
+<link rel="stylesheet" type="text/css" href="/cgq/css/cloud-admin.css">
+<link rel="stylesheet" type="text/css"
+	href="/cgq/css/themes/default.css" id="skin-switcher">
+<link rel="stylesheet" type="text/css" href="/cgq/css/responsive.css">
+
+<link href="/cgq/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+<!-- JQUERY UI-->
+<link rel="stylesheet" type="text/css"
+	href="/cgq/js/jquery-ui-1.10.3.custom/css/custom-theme/jquery-ui-1.10.3.custom.min.css" />
+<!-- DATE RANGE PICKER -->
+<link rel="stylesheet" type="text/css"
+	href="/cgq/js/bootstrap-daterangepicker/daterangepicker-bs3.css" />
+<!-- DATA TABLES -->
+<link rel="stylesheet" type="text/css"
+	href="/cgq/js/datatables/media/css/jquery.dataTables.min.css" />
+<link rel="stylesheet" type="text/css"
+	href="/cgq/js/datatables/media/assets/css/datatables.min.css" />
+<link rel="stylesheet" type="text/css"
+	href="/cgq/js/datatables/extras/TableTools/media/css/TableTools.min.css" />
+<!-- FONTS -->
+<link href='http://fonts.useso.com/css?family=Open+Sans:300,400,600,700'
+	rel='stylesheet' type='text/css'>
+
+<!-- JAVASCRIPTS -->
+<!-- Placed at the end of the document so the pages load faster -->
+<!-- JQUERY -->
+<script src="/cgq/js/jquery/jquery-2.0.3.min.js"></script>
+<!-- JQUERY UI-->
+<script
+	src="/cgq/js/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.min.js"></script>
+<!-- BOOTSTRAP -->
+<script src="/cgq/bootstrap-dist/js/bootstrap.min.js"></script>
+
+
+<!-- DATE RANGE PICKER -->
+<script src="/cgq/js/bootstrap-daterangepicker/moment.min.js"></script>
+
+<script src="/cgq/js/bootstrap-daterangepicker/daterangepicker.min.js"></script>
+<!-- SLIMSCROLL -->
+<script type="text/javascript"
+	src="/cgq/js/jQuery-slimScroll-1.3.0/jquery.slimscroll.min.js"></script>
+<script type="text/javascript"
+	src="/cgq/js/jQuery-slimScroll-1.3.0/slimScrollHorizontal.min.js"></script>
+<!-- BLOCK UI -->
+<script type="text/javascript"
+	src="/cgq/js/jQuery-BlockUI/jquery.blockUI.min.js"></script>
+<!-- DATA TABLES -->
+<script type="text/javascript"
+	src="/cgq/js/datatables/media/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript"
+	src="/cgq/js/datatables/media/assets/js/datatables.min.js"></script>
+<script type="text/javascript"
+	src="/cgq/js/datatables/extras/TableTools/media/js/TableTools.min.js"></script>
+<script type="text/javascript"
+	src="/cgq/js/datatables/extras/TableTools/media/js/ZeroClipboard.min.js"></script>
+<!-- COOKIE -->
+<script type="text/javascript"
+	src="/cgq/js/jQuery-Cookie/jquery.cookie.min.js"></script>
+<!-- CUSTOM SCRIPT -->
+<script src="/cgq/js/script.js"></script>
+<script>
+	jQuery(document).ready(init());
+
+	//初始化班级列表
+	function init() {
+		$.post("classes/list", function(data) {
+			var classes = eval("(" + data + ")");
+			loadTableData(classes);
+		}).done(function() {
+			//在数据加载完成后 初始化 分页
+			App.setPage("dynamic_table"); //Set current page
+			App.init(); //Initialise plugins and elements
+			loadCompanyTeacher();
+		});
+	}
+
+	function loadCompanyTeacher() {
+		$.post("teacher/queryCompanyTeacher", function(data) {
+			var select_append_str = '';
+			for (var i = 0; i < data.length; i++) {
+				select_append_str += "<option value='"+data[i].id+"' >"
+						+ data[i].englishName + "/" + data[i].nickName
+						+ "</option>";
+			}
+			$("#companyTeacherId").append(select_append_str);
+		})
+	}
+
+	//班级列表加载数据
+	function loadTableData(classes) {
+		for (var i = 0; i < classes.length; i++) {
+			var classid = classes[i].id;
+			var classname = classes[i].className;
+			var classLevel = classes[i].classLevel;
+			var companyTeacherId = classes[i].companyTeacherId;
+			var companyTeacherName = classes[i].companyTeacherName;
+			var totalStudent = classes[i].totalStudent;
+			var tr_demo_str = "<tr class='gradeX'>";
+			tr_demo_str = tr_demo_str + "<td>" + classname + "</td>";
+			tr_demo_str = tr_demo_str + "<td>" + classLevel + "</td>";
+			tr_demo_str = tr_demo_str + "<td>" + companyTeacherName + "</td>";
+			/* tr_demo_str = tr_demo_str + "<td class='center'>" + totalStudent
+					+ "</td>"; */
+			tr_demo_str = tr_demo_str
+					+ "<td><button  class='btn btn-xs btn-success'   onclick=configstudent('"
+					+ classid
+					+ "')>学生管理</button>&nbsp<button  class='btn btn-yellow btn-xs'   onclick=configcourse('"
+					+ classid
+					+ "')>安排课程</button>&nbsp<button class='btn btn-xs btn-danger'onclick=deldata('"
+					+ classid + "')>删除</button></td>";
+			tr_demo_str = tr_demo_str + "</tr>";
+			$("#datatable_tbody").append(tr_demo_str);
+		}
+	}
+
+	//删除
+	function deldata(dataid) {
+		if (confirm("确定要删除此班级吗？")) {
+			$.get("classes/deldata?id=" + dataid, function(data) {
+				location.reload();
+			})
+		}
+	}
+
+	function configstudent(classid) {
+		window.open("classes/configStudent?classid=" + classid);
+	}
+
+	function configcourse(classid){
+		window.open("classes/configCourse?classid=" + classid);
+	}
+	
+	//保存数据
+	function saveData(requestUrl) {
+		$.ajax({
+			cache : true,
+			type : "POST",
+			url : requestUrl,
+			data : $('#classesDataForm').serialize(),
+			async : false,
+			error : function(request) {
+				alert("服务器异常");
+			},
+			success : function(data) {
+				location.reload();
+			}
+		});
+	}
+
+	//清空表单关闭模态窗口窗口
+	function clearForm() {
+		$("#classesDataForm  input ").val("");
+		$("#box-config").modal('hide');
+	}
+</script>
+<!-- /JAVASCRIPTS -->
+</head>
+<body>
+	<!-- PAGE -->
+	<section id="page"> <!-- SIDEBAR --> <!-- /SIDEBAR MENU --> <!-- /SIDEBAR -->
+	<div style="">
+		<!-- 添加班级的模态窗口 -->
+		<div class="modal fade" id="box-config" tabindex="-1" role="dialog"
+			aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"
+							aria-hidden="true">&times;</button>
+						<h4 class="modal-title">班级添加</h4>
+					</div>
+					<div class="modal-body">
+						<div class="box ">
+							<div class="box-body">
+								<form id="classesDataForm" class="form-horizontal" role="form">
+									<div class="form-group">
+										<label class="col-sm-3 control-label">班级名</label>
+										<div class="col-sm-9">
+											<input name="className" class="form-control input-lg"
+												type="text" placeholder="班级名">
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="col-sm-3 control-label">年级</label>
+										<div class="col-sm-9">
+											<select name="classLevel" class="form-control">
+												<option value="一年级">一年级</option>
+												<option value="二年级">二年级</option>
+											</select>
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="col-sm-3 control-label">陪伴老师</label>
+										<div class="col-sm-9">
+											<select id="companyTeacherId" name="companyTeacherId"
+												class="form-control">
+											</select>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default"
+							onclick="clearForm()">取消</button>
+						<button type="button" class="btn btn-primary"
+							onclick="saveData('classes/addData')">保存</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- /SAMPLE BOX CONFIGURATION MODAL FORM-->
+		<div class="container">
+			<div class="row">
+				<div id="content" class="col-lg-12">
+					<!-- PAGE HEADER-->
+					<div class="row">
+						<div class="col-sm-12">
+							<div class="page-header">
+								<!-- STYLER -->
+
+								<!-- /STYLER -->
+								<!-- BREADCRUMBS -->
+								<ul class="breadcrumb">
+									<li><i class="fa fa-home"></i> <a href="/cgq">Home</a></li>
+									<li>班级管理</li>
+								</ul>
+								<!-- /BREADCRUMBS -->
+								<div class="clearfix">
+									<h3 class="content-title pull-left">班级管理</h3>
+								</div>
+								<div class="description">管理各个班级的信息</div>
+							</div>
+						</div>
+					</div>
+					<!-- /PAGE HEADER -->
+					<!-- DATA TABLES -->
+					<div class="row">
+						<div class="col-md-12">
+							<!-- BOX -->
+							<div class="box border green">
+								<div class="box-title">
+									<h4>
+										<i class="fa fa-table"></i>班级列表
+									</h4>
+									<div class="tools hidden-xs">
+										<a href="#box-config" data-toggle="modal" class="config"
+											title="添加班级"> <i class="fa fa-plus"></i>
+										</a> 
+									</div>
+								</div>
+								<div class="box-body">
+									<table id="datatable1" cellpadding="0" cellspacing="0"
+										border="0"
+										class="datatable table table-striped table-bordered table-hover">
+										<thead>
+											<tr>
+												<th>班级名称</th>
+												<th>年级</th>
+												<th class="hidden-xs">陪伴教师</th>
+												<!-- <th>学生数</th> -->
+												<th>操作</th>
+											</tr>
+										</thead>
+										<tbody id="datatable_tbody">
+										</tbody>
+									</table>
+								</div>
+							</div>
+							<!-- /BOX -->
+						</div>
+					</div>
+					<!-- /DATA TABLES -->
+				</div>
+				<!-- /CONTENT-->
+			</div>
+		</div>
+	</div>
+	</section>
+	<!--/PAGE -->
+</body>
+</html>

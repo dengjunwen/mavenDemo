@@ -1,0 +1,233 @@
+package com.cgq.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import com.cgq.mapper.RewardMapper;
+import com.cgq.mapper.StudentTaskHistoryMapper;
+import com.cgq.mapper.StudentTaskPageHistoryMapper;
+import com.cgq.mapper.TaskMapper;
+import com.cgq.model.Page;
+import com.cgq.model.PageTask;
+import com.cgq.model.Reward;
+import com.cgq.model.StudentTaskHistory;
+import com.cgq.model.StudentTaskPageHistory;
+import com.cgq.model.Task;
+import com.cgq.service.PageService;
+import com.cgq.service.PageTaskService;
+import com.cgq.service.StudentTaskHistoryService;
+import com.cgq.service.StudentTaskPageHistoryService;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.RedisCache;
+import com.cgq.util.ResultCode;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+
+@Service
+@Transactional
+public class StudentTaskHistoryServiceImpl implements StudentTaskHistoryService {
+
+	@Autowired
+	private StudentTaskHistoryMapper studentTaskHistoryMapper;
+	@Autowired
+	private TaskMapper taskMapper;
+	@Autowired
+	private StudentTaskPageHistoryMapper studentTaskPageHistoryMapper;
+	@Autowired
+	private RewardMapper rewardMapper;
+	@Autowired
+	private PageTaskService pageTaskService;
+	@Autowired
+	private PageService pageService;
+	@Autowired
+	private StudentTaskPageHistoryService studentTaskPageHistoryService;
+	
+
+	private static final int TASKHISTORYSTATUS_END = 1;
+
+	@Override
+	public void addTaskHistory(StudentTaskHistory history) throws Exception {
+		Example e = new Example(StudentTaskHistory.class);
+		Criteria criteria = e.createCriteria().andEqualTo("studentId", history.getStudentId())
+				.andEqualTo("TTaskId", history.getTTaskId()).andEqualTo("taskType", ResultCode.TASK_TYPE_ONLINE);
+		List<StudentTaskHistory> list = studentTaskHistoryMapper.selectByExample(e);
+		if (CheckUtil.notEmpty(list) && list.size() != 0) {
+			StudentTaskHistory old = list.get(0);
+			history.setId(old.getId());
+			updateTaskHistory(history);
+		} else {
+			studentTaskHistoryMapper.insertSelective(history);
+		}
+	}
+
+	@Override
+	public void updateTaskHistory(StudentTaskHistory history) throws Exception {
+		studentTaskHistoryMapper.updateByPrimaryKeySelective(history);
+	}
+
+	@Override
+	public List<StudentTaskHistory> queryStudentTaskHistoryByUserId(Integer userId) {
+		Example e = new Example(StudentTaskHistory.class);
+		e.createCriteria().andEqualTo("studentId", userId).andEqualTo("taskType", ResultCode.TASK_TYPE_ONLINE)
+				.andEqualTo("status", ResultCode.STATUS_FINISHED);
+		e.setOrderByClause(" updatetime asc ");
+		List<StudentTaskHistory> histories = studentTaskHistoryMapper.selectByExample(e);
+		for (StudentTaskHistory history : histories) {
+			Task task = taskMapper.selectByPrimaryKey(history.getTTaskId());
+			history.setTaskName(task.getTaskName());
+		}
+
+		return CheckUtil.notEmpty(histories) ? histories : null;
+	}
+
+	@Override
+	public StudentTaskHistory queryStudentUndoneTaskHistory(Integer userid, Integer taskid) {
+		// TODO Auto-generated method stub
+		Example e = new Example(StudentTaskHistory.class);
+		e.createCriteria().andEqualTo("studentId", userid).andEqualTo("TTaskId", taskid);
+		// .andEqualTo("status", ResultCode.STATUS_NOT_FINISHED);
+		// e.setOrderByClause("page_index desc ");
+		List<StudentTaskHistory> histories = studentTaskHistoryMapper.selectByExample(e);
+		// 完成步数最多的记录
+		/*
+		 * StudentTaskHistory maxIndexHistory = null; for(StudentTaskHistory
+		 * history : histories){ if(maxIndexHistory==null ||
+		 * maxIndexHistory.getPageIndex()<history.getPageIndex()){
+		 * maxIndexHistory = history; } }
+		 */
+
+		// 针对online任务 查询3.查询上传的资源是否够
+
+		return CheckUtil.notEmpty(histories) && histories.size() != 0 ? histories.get(0) : null;
+
+	}
+
+	@Override
+	public void endLiveTaskHistory(StudentTaskHistory history) throws Exception {
+		Example e = new Example(StudentTaskHistory.class);
+		Criteria criteria = e.createCriteria().andEqualTo("studentId", history.getStudentId())
+				.andEqualTo("TTaskId", history.getTTaskId()).andNotEqualTo("status", TASKHISTORYSTATUS_END);
+		;
+		List<StudentTaskHistory> list = studentTaskHistoryMapper.selectByExample(e);
+		if (list.size() < 1)
+			return;
+		StudentTaskHistory old = list.get(0);
+		old.setStatus(TASKHISTORYSTATUS_END);
+		updateTaskHistory(old);
+	}
+
+	@Override
+	public void addLiveTaskHistory(StudentTaskHistory history) throws Exception {
+		Example e = new Example(StudentTaskHistory.class);
+		Criteria criteria = e.createCriteria().andEqualTo("studentId", history.getStudentId())
+				.andEqualTo("TTaskId", history.getTTaskId()).andNotEqualTo("status", TASKHISTORYSTATUS_END);
+		List<StudentTaskHistory> list = studentTaskHistoryMapper.selectByExample(e);
+		if (list.size() > 0) {
+			StudentTaskHistory old = list.get(0);
+			history.setId(old.getId());
+			updateTaskHistory(history);
+		} else {
+			studentTaskHistoryMapper.insertSelective(history);
+		}
+	}
+
+	@Override
+	public StudentTaskHistory queryHistoryByUserIdAndTaskId(Integer userid, Integer taskid) {
+		Example e = new Example(StudentTaskHistory.class);
+		Criteria criteria = e.createCriteria().andEqualTo("studentId", userid).andEqualTo("TTaskId", taskid);
+		List<StudentTaskHistory> list = studentTaskHistoryMapper.selectByExample(e);
+		return CheckUtil.notEmpty(list) ? list.get(0) : null;
+	}
+
+	@Override
+	public List<StudentTaskHistory> listAll() {
+		// TODO Auto-generated method stub
+		return studentTaskHistoryMapper.listAll();
+	}
+
+	public void delStudentTaskHistory(Integer historyid) {
+		// TODO Auto-generated method stub
+		// 查询学生ID和任务ID
+		StudentTaskHistory student = studentTaskHistoryMapper.selectByPrimaryKey(historyid);
+		// 删除studentTaskHistory表记录
+		studentTaskHistoryMapper.deleteByPrimaryKey(historyid);
+		// 根据学生ID和任务ID删除studentTaskPageHistory表记录
+		Example studentTaskPageExample = new Example(StudentTaskPageHistory.class);
+		studentTaskPageExample.createCriteria().andEqualTo("studentId", student.getStudentId()).andEqualTo("taskId",
+				student.getTTaskId());
+		studentTaskPageHistoryMapper.deleteByExample(studentTaskPageExample);
+		//删除缓存中页面标识
+		RedisCache.del(student.getTTaskId()+"_"+student.getStudentId());
+		// 根据学生ID和任务ID删除reward表记录
+		Example rewardExample = new Example(Reward.class);
+		rewardExample.createCriteria().andEqualTo("userId", student.getStudentId()).andEqualTo("taskId",
+				student.getTTaskId());
+		rewardMapper.deleteByExample(rewardExample);
+	}
+	
+	
+	public boolean jumpIntoNextPage(Integer taskid, Integer index,Integer userid){
+		
+		Example e = new Example(StudentTaskHistory.class);
+		e.createCriteria().andEqualTo("studentId", userid).andEqualTo("TTaskId", taskid);
+		// .andEqualTo("status", ResultCode.STATUS_NOT_FINISHED);
+		// e.setOrderByClause("page_index desc ");
+		int countTask = 0;
+		List<StudentTaskHistory> histories = studentTaskHistoryMapper.selectByExample(e);
+		List<StudentTaskPageHistory>	  userHistories =  studentTaskPageHistoryService.getResourceIdByStudentAndPageId(userid, index, taskid);
+		
+		if (CheckUtil.notEmpty(histories) && histories.size() != 0) {
+			StudentTaskHistory history = histories.get(0);
+			// 判断上一步任务的状态，以及完成的情况。
+			// 1.如果不需要完成任务，直接跳回来
+			PageTask pageTask = pageTaskService.queryByPageId(history.getTTaskId(), index);
+			if (ResultCode.PAGE_TASK_NEED_NOT == pageTask.getStatus()) {	
+				// 可以跳入
+				return true;
+			}
+			if (ResultCode.PAGE_TASK_NEEDED == pageTask.getStatus()) {
+				// 判断当前页面任务的完成情况。
+					List<Page> pages = 	pageService.queryPageByPageid(pageTask.getTpageId());
+					for(Page p:pages){
+							if(CheckUtil.isEmpty(p.getResourceid())){
+								++countTask;
+							}
+							if(p.getIsAnswer() == 1){
+								++countTask;
+							}
+					}
+					if(CheckUtil.notEmpty(userHistories)&&userHistories.size()!=0){
+						if(userHistories.size()>=countTask){
+							System.out.println("==========用户id"+userid+"========用户所传任务资源"+userHistories.size()+"========================页面需要任务数======"+countTask+"====================================");
+							return true;	
+						}else{
+							return false;
+						}
+						
+					}else{
+						return false;
+					}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public void delStudentTaskHistory(Integer studentId, Integer taskId, Integer pageIndex) {
+		
+		Example studentTaskPageExample = new Example(StudentTaskPageHistory.class);
+		studentTaskPageExample.createCriteria().andEqualTo("studentId", studentId).andEqualTo("taskId",
+				taskId).andEqualTo("pageIndex", pageIndex);
+		studentTaskPageHistoryMapper.deleteByExample(studentTaskPageExample);
+		// 根据学生ID和任务ID删除reward表记录
+		Example rewardExample = new Example(Reward.class);
+		rewardExample.createCriteria().andEqualTo("userId", studentId).andEqualTo("taskId",
+				taskId).andEqualTo("pageIndex", pageIndex);
+		rewardMapper.deleteByExample(rewardExample);
+	}
+}

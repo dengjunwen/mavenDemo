@@ -1,0 +1,19 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.StudentTaskPageHistory;
+
+public interface StudentTaskPageHistoryService {
+	
+	List<StudentTaskPageHistory>	getResourceIdByStudentAndPageId(Integer studentId,Integer index, Integer taskId);
+	
+	public int insert(StudentTaskPageHistory studentTaskPageHistory) throws Exception;
+	
+	public int update(StudentTaskPageHistory studentTaskPageHistory) throws Exception;
+	
+	
+	
+	
+	
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cgq.mapper.StudentCheckListMapper">
+	<select id="listByStudentidPager" resultType="StudentCheckList"
+		parameterType="StudentCheckList">
+		SELECT
+		id,
+		studentid,
+		start_date startDate,
+		end_date endDate 
+		FROM t_student_checklist
+		where studentid = #{studentid}
+		ORDER BY start_date DESC
+		limit ${start},${size}
+	</select>
+</mapper> 

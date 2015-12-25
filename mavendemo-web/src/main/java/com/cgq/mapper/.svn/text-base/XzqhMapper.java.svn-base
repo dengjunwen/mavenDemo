@@ -1,0 +1,28 @@
+package com.cgq.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import tk.mybatis.mapper.common.Mapper;
+
+import com.cgq.model.WxXzqh;
+import com.cgq.model.Xzqh;
+
+
+public interface XzqhMapper extends Mapper<Xzqh> {
+
+	public List<Xzqh> queryXzqh(Xzqh xzqh);
+	
+	public Xzqh queryOneXzqh(Xzqh xzqh);
+	
+	public void insertXzqh(Map<String,Object> map);
+	
+	public void updateXzqh(Map<String,Object> map);
+	
+	public void deleteXzqh(Xzqh xzqh);
+	
+	public List<WxXzqh> querySC();
+	public WxXzqh queryOneSC(Map<String,Object> map);
+	public WxXzqh queryScArea(Map<String,Object> map);
+	public void updateXzqh1(Map<String,Object> map);
+}

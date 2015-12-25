@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cgq.mapper.StudentTaskScoreMapper">
+
+	<select id="listStudentTaskHistory" resultType="StudentTaskScore">
+		SELECT
+		a.*,
+		b.id,
+		b.english_score englishScore,
+		b.science_score scienceScore,
+		b.creation_score creationScore,
+		b.resilience_score resilienceScore,
+		b.independence_score independenceScore,
+		b.communication_score communicationScore,
+		b.self_management_score selfManagementScore,
+		b.learning_attitude_score learningAttitudeScore
+		FROM
+		(SELECT DISTINCT
+		t_student_id studentid, t_task_id taskid
+		FROM
+		t_student_task_history
+		WHERE
+		status = 1) a
+		LEFT JOIN
+		t_student_task_score b ON a.studentid = b.studentid
+		AND a.taskid = b.taskid
+	</select>
+
+	<update id="updateStudentScoreByStudentidAndTaskid"
+		parameterType="StudentTaskScore">
+		update t_student_task_score 
+		<set>
+			<if test="englishScore != null  ">
+				english_score = #{englishScore},
+			</if>
+			<if test="scienceScore != null ">
+				science_score = #{scienceScore},
+			</if>
+			<if test="creationScore != null ">
+				creation_score = #{creationScore},
+			</if>
+			<if test="resilienceScore != null ">
+				resilience_score = #{resilienceScore},
+			</if>
+			<if test="independenceScore != null ">
+				independence_score = #{independenceScore},
+			</if>
+			<if test="communicationScore != null ">
+				communication_score = #{communicationScore},
+			</if>
+			<if test="selfManagementScore != null ">
+				self_management_score = #{selfManagementScore},
+			</if>
+			<if test="learningAttitudeScore != null ">
+				learning_attitude_score = #{learningAttitudeScore} 
+			</if>
+		</set>
+		where studentid = #{studentid} and taskid = #{taskid}  
+	</update>
+
+
+</mapper>

@@ -1,0 +1,130 @@
+package com.cgq.model;
+
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+/**
+ * Task entity. @author MyEclipse Persistence Tools
+ */
+@Entity
+@Table(name = "t_task", catalog = "xschool")
+public class Task implements java.io.Serializable {
+
+	// Fields
+	@Id
+	@Column(name = "id", unique = true, nullable = false)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
+	@Column(name = "taskname", length = 45)
+	private String taskName;
+	@Column(name = "tasktype", length = 45)
+	private String taskType;
+	@Column(name = "countstep")
+	private Integer countStep;
+	@Column(name = "createtime", length = 45)
+	private String createTime;
+	@Column(name = "status")
+	private Integer status;
+	@Column(name="description")
+	private String description;
+	// ORM框架忽略该属性
+	@Transient
+	private List<Page> pages;
+	// Constructors
+
+	/** default constructor */
+	public Task() {
+	}
+
+	public List<Page> getPages() {
+		return pages;
+	}
+
+	public void setPages(List<Page> pages) {
+		this.pages = pages;
+	}
+
+	/** minimal constructor */
+	public Task(Integer id) {
+		this.id = id;
+	}
+
+	/** full constructor */
+	public Task(Integer id, String taskName, String taskType, Integer countStep, String createTime, Integer status) {
+		this.id = id;
+		this.taskName = taskName;
+		this.taskType = taskType;
+		this.countStep = countStep;
+		this.createTime = createTime;
+		this.status = status;
+	}
+
+	// Property accessors
+
+	public Integer getId() {
+		return this.id;
+	}
+
+	public Integer getStatus() {
+		return status;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public String getTaskName() {
+		return this.taskName;
+	}
+
+	public void setTaskName(String taskName) {
+		this.taskName = taskName;
+	}
+
+	public String getTaskType() {
+		return this.taskType;
+	}
+
+	public void setTaskType(String taskType) {
+		this.taskType = taskType;
+	}
+
+	public Integer getCountStep() {
+		return this.countStep;
+	}
+
+	public void setCountStep(Integer countStep) {
+		this.countStep = countStep;
+	}
+
+	public String getCreateTime() {
+		return this.createTime;
+	}
+
+	public void setCreateTime(String createTime) {
+		this.createTime = createTime;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	
+	
+	
+	
+}

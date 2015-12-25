@@ -1,0 +1,67 @@
+package com.cgq.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cgq.mapper.StudentMapper;
+import com.cgq.mapper.StudentTaskScoreMapper;
+import com.cgq.mapper.TaskMapper;
+import com.cgq.model.StudentTaskPageHistory;
+import com.cgq.model.StudentTaskScore;
+import com.cgq.service.StudentTaskScoreService;
+import com.cgq.util.CheckUtil;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+
+@Service
+public class StudentTaskScoreServiceImpl implements StudentTaskScoreService {
+
+	@Autowired
+	private StudentTaskScoreMapper studentTaskScoreMapper;
+
+	@Autowired
+	private StudentMapper studentMapper;
+
+	@Autowired
+	private TaskMapper taskMapper;
+
+	@Override
+	public List<StudentTaskScore> listStudentTaskHistory() {
+		// TODO Auto-generated method stub
+		List<StudentTaskScore> result = studentTaskScoreMapper.listStudentTaskHistory();
+		for (StudentTaskScore score : result) {
+			Integer studentid = score.getStudentid();
+			String studentname = studentMapper.selectByPrimaryKey(studentid).getEnglishName();
+			Integer taskid = score.getTaskid();
+			String taskname = taskMapper.selectByPrimaryKey(taskid).getTaskName();
+			score.setStudentname(studentname);
+			score.setTaskname(taskname);
+		}
+		return result;
+
+	}
+
+	@Override
+	public void saveStudentScore(StudentTaskScore studentTaskScore) {
+		// TODO Auto-generated method stub
+		studentTaskScoreMapper.insert(studentTaskScore);
+	}
+
+	@Override
+	public int updateStudentScoreByStudentidAndTaskid(StudentTaskScore studentTaskScore) {
+		// TODO Auto-generated method stub
+		return studentTaskScoreMapper.updateStudentScoreByStudentidAndTaskid(studentTaskScore);
+	}
+
+	@Override
+	public StudentTaskScore getStudentTaskScoreByStudentIdAndTaskId(Integer studentId, Integer taskId) {
+		Example e = new Example(StudentTaskScore.class);
+		Criteria criteria = e.createCriteria().andEqualTo("studentid", studentId).andEqualTo("taskid", taskId);
+		List< StudentTaskScore> stses = studentTaskScoreMapper.selectByExample(e);
+		return CheckUtil.notEmpty(stses)&&stses.size()!=0?stses.get(0):null;
+	}
+
+}

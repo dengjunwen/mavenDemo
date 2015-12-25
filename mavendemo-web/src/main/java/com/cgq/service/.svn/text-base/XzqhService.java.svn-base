@@ -1,0 +1,30 @@
+package com.cgq.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.cgq.model.TreeNode;
+import com.cgq.model.Xzqh;
+
+public interface XzqhService {
+
+	
+	public List<Xzqh> queryXzqh(Xzqh xzqh);
+	
+	public Xzqh queryOneXzqh(Xzqh xzqh);
+	
+	public void insertXzqh(Xzqh xzqh);
+	
+	public void insertXzqh(Map<String,Object> map);
+	
+	public void deleteXzqh(Xzqh xzqh);
+	
+	public void updateXzqh(Map<String,Object> map);
+	
+	public TreeNode queryOneXzqh(String param);
+	public List<TreeNode> queryListXzqh(String param);
+	
+	
+	public void insertData();
+	public void clearData();
+}

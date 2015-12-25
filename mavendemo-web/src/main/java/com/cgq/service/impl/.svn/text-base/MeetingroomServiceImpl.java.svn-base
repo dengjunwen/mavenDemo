@@ -1,0 +1,153 @@
+package com.cgq.service.impl;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cgq.model.Group;
+import com.cgq.model.LiveCourse;
+import com.cgq.model.Reward;
+import com.cgq.model.Student;
+import com.cgq.model.StudentLive;
+import com.cgq.model.StudentTaskHistory;
+import com.cgq.model.Task;
+import com.cgq.service.CourseService;
+import com.cgq.service.LiveCourseService;
+import com.cgq.service.MeetingroomService;
+import com.cgq.service.RewardService;
+import com.cgq.service.StudentTaskHistoryService;
+import com.cgq.util.CheckUtil;
+
+@Service
+public class MeetingroomServiceImpl implements MeetingroomService{
+
+	/**
+	 * 正在使用的直播课程对象存储在此Map中
+	 */
+	private static Map<String,LiveCourse> liveCourseMap = new HashMap<>();
+	
+	@Autowired
+	private LiveCourseService liveCourseService;
+	
+	@Autowired
+	private StudentTaskHistoryService studentTaskHistoryService;
+	
+	@Autowired
+	private CourseService courseService;
+	
+	@Autowired
+	private RewardService rewardservice;
+	
+	@Override
+	public void studentStatusChange(String courseid,Integer studentid, String seat, String groupid, Integer handstatus,
+			Integer micstatus, Integer isonline, Integer energy) {
+		// TODO Auto-generated method stub
+		LiveCourse livecourse = liveCourseMap.get(courseid) ;
+		Set<StudentLive> studentliveset = livecourse.getStudentSet();
+		for(StudentLive studentlive : studentliveset){
+			//找到匹配的学生对象
+			if(studentlive.getId().equals(studentid)){
+				//如果所传参数非空则更新对象属性
+				if(!CheckUtil.isEmpty(seat) ){
+					studentlive.setSeat(seat);
+				}
+				if(!CheckUtil.isEmpty(groupid)){
+					studentlive.setGroupid(groupid);
+				}
+				if(!CheckUtil.isEmpty(handstatus)){
+					studentlive.setHandstatus(handstatus);
+				}
+				if(!CheckUtil.isEmpty(micstatus)){
+					studentlive.setMicstatus(micstatus);
+				}
+				if(!CheckUtil.isEmpty(isonline)){
+					studentlive.setIsonline(isonline);
+				}
+				if(!CheckUtil.isEmpty(energy)){
+					Set<Group> groups = livecourse.getGroupSet();
+					for(Group group : groups){
+						if(group.getGroupid().equals(studentlive.getGroupid())){
+							int groupScore = group.getGroupscore();
+							group.setGroupscore(groupScore+energy);
+						}
+					}
+					studentlive.setEnergy(studentlive.getEnergy() + energy);
+				}
+			}
+			
+		}
+	}
+
+	@Override
+	public LiveCourse getLiveInstanceCourse(String courseid) throws Exception {
+		// TODO Auto-generated method stub
+		LiveCourse liveCourse = liveCourseService.instance(courseid);
+		liveCourseMap.put(courseid, liveCourse);
+		return liveCourse ;
+	}
+	
+	@Override
+	public LiveCourse getLiveCourse(String courseid) throws Exception {
+		// TODO Auto-generated method stub
+		return liveCourseMap.get(courseid);
+	}
+
+	@Override
+	public void groupStatusChange(String courseid,String groupid, String groupscore, String status) {
+		// TODO Auto-generated method stub
+		LiveCourse livecourse = liveCourseMap.get(courseid);
+		Set<Group>  groupSet = livecourse.getGroupSet();
+		for(Group group : groupSet){
+			//找到匹配的group对象
+			if(group.getGroupid().equals(groupid)){
+				//如果参数非空则将属性设置为参数值
+				if(!CheckUtil.isEmpty(groupscore)){
+					group.setGroupscore(Integer.valueOf(groupscore));
+				}
+				if(!CheckUtil.isEmpty(status)){
+					group.setStatus(Integer.valueOf(status));
+				}
+			}
+		}
+	}
+
+	@Override
+	public void endlivecourse(String courseid) throws Exception {
+		// TODO Auto-generated method stub
+		LiveCourse course = liveCourseMap.get(courseid);
+		//LiveCourse实例释放占用的会议室对象
+		liveCourseService.freeMeetingRoom(course.getMeetingroom());
+		//从Map中去除LiveCourse实例
+		liveCourseMap.remove(courseid);
+		//更新task_history记录
+		Set<StudentLive> studentset = course.getStudentSet();
+		Task task = courseService.getTaskByCourseid(courseid);
+		for(StudentLive student : studentset){
+			StudentTaskHistory history = new StudentTaskHistory();
+			history.setStudentId(student.getId());
+			history.setTTaskId(task.getId());
+			studentTaskHistoryService.endLiveTaskHistory(history);
+			//记录学生奖励
+			int energy = student.getEnergy();
+			if(energy < 1)continue;
+			Reward reward = new Reward();
+			reward.setUserId(student.getId());
+			reward.setNum(student.getEnergy());
+			reward.setTaskId(task.getId());
+			reward.setPageIndex(0);
+			rewardservice.addReward(reward);
+		}
+	}
+
+	@Override
+	public void meetingroomstatuschange(String courseid, Integer isHeadPic) {
+		// TODO Auto-generated method stub
+		LiveCourse livecourse = liveCourseMap.get(courseid);
+		livecourse.getMeetingroom().setIsHeadPic(isHeadPic);
+	}
+
+
+}

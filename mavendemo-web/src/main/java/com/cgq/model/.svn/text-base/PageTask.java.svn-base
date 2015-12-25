@@ -1,0 +1,168 @@
+package com.cgq.model;
+
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import com.google.common.collect.Lists;
+
+/**
+ * PageTask entity. @author MyEclipse Persistence Tools
+ */
+@Entity
+@Table(name = "t_page_task", catalog = "xschool")
+public class PageTask implements java.io.Serializable {
+
+	// Fields
+	@Id
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	@Column(name = "page_index")
+	private Integer pageIndex;
+	@Column(name = "t_task_id", nullable = false)
+	private Integer ttaskId;
+	@Column(name = "t_page_id", nullable = false)
+	private String tpageId;
+	@Column(name="template_id")
+	private Integer templateId;
+	@Column(name="page_name")
+	private String pageName;
+	@Column(name="description")
+	private String description;
+	@Column(name="success_resource_img")
+	private Integer successResourceImg;
+	@Column(name="error_resource_img")
+	private Integer errorResourceImg;
+	/**
+	 * 该页面是否需要完成任务，今而判断，是否有成功页面
+	 * 0：不需要 1：需要
+	 */
+	@Column(name="status")
+	private Integer status;
+	@Column(name="usetime")
+	private Integer usertime;
+	@Transient
+	private String taskName;
+	@Transient
+	private List<Page> pages = Lists.newArrayList();
+	
+	public PageTask() {
+	}
+
+	public Integer getId() {
+		return this.id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getPageIndex() {
+		return this.pageIndex;
+	}
+
+	public void setPageIndex(Integer pageIndex) {
+		this.pageIndex = pageIndex;
+	}
+
+	public Integer getTtaskId() {
+		return ttaskId;
+	}
+
+	public void setTtaskId(Integer ttaskId) {
+		this.ttaskId = ttaskId;
+	}
+
+	public String getTpageId() {
+		return tpageId;
+	}
+
+	public void setTpageId(String tpageId) {
+		this.tpageId = tpageId;
+	}
+
+	public Integer getStatus() {
+		return status;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	public List<Page> getPages() {
+		return pages;
+	}
+
+	public void setPages(List<Page> pages) {
+		this.pages = pages;
+	}
+
+	public String getTaskName() {
+		return taskName;
+	}
+
+	public void setTaskName(String taskName) {
+		this.taskName = taskName;
+	}
+
+	public Integer getTemplateId() {
+		return templateId;
+	}
+
+	public void setTemplateId(Integer templateId) {
+		this.templateId = templateId;
+	}
+
+	public Integer getSuccessResourceImg() {
+		return successResourceImg;
+	}
+
+	public void setSuccessResourceImg(Integer successResourceImg) {
+		this.successResourceImg = successResourceImg;
+	}
+
+	public Integer getErrorResourceImg() {
+		return errorResourceImg;
+	}
+
+	public void setErrorResourceImg(Integer errorResourceImg) {
+		this.errorResourceImg = errorResourceImg;
+	}
+
+	public String getPageName() {
+		return pageName;
+	}
+
+	public void setPageName(String pageName) {
+		this.pageName = pageName;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public Integer getUsertime() {
+		return usertime;
+	}
+
+	public void setUsertime(Integer usertime) {
+		this.usertime = usertime;
+	}
+
+	public PageTask(Integer id, Integer pageIndex, Integer ttaskId) {
+		super();
+		this.id = id;
+		this.pageIndex = pageIndex;
+		this.ttaskId = ttaskId;
+	}
+	
+	
+}

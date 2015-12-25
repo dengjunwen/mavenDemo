@@ -1,0 +1,83 @@
+package com.cgq.model;
+
+
+public class WxXzqh {
+
+	private String id;
+	private Integer xzqh_id;
+	private String xzqh_name;
+	private String parent;
+	private String belong;
+	private String xzqh_fullname;
+
+	
+	public WxXzqh( String id, String xzqh_name,
+			String xzqh_fullname) {
+		super();
+		this.id = id;
+		this.xzqh_name = xzqh_name;
+		this.xzqh_fullname = xzqh_fullname;
+	}
+	
+	public WxXzqh(String xzqh_name, Integer xzqh_id,  String parent,
+			String belong) {
+		super();
+		this.xzqh_id = xzqh_id;
+		this.xzqh_name = xzqh_name;
+		this.parent = parent;
+		this.belong = belong;
+	}
+	
+	public WxXzqh(Integer xzqh_id, String xzqh_name, String parent,
+			String belong,String xzqh_fullname) {
+		super();
+		this.xzqh_id = xzqh_id;
+		this.xzqh_name = xzqh_name;
+		this.parent = parent;
+		this.belong = belong;
+		this.xzqh_fullname = xzqh_fullname;
+	}
+	
+	public Integer getXzqh_id() {
+		return xzqh_id;
+	}
+	public void setXzqh_id(Integer xzqh_id) {
+		this.xzqh_id = xzqh_id;
+	}
+	public String getXzqh_name() {
+		return xzqh_name;
+	}
+	public void setXzqh_name(String xzqh_name) {
+		this.xzqh_name = xzqh_name;
+	}
+	public String getParent() {
+		return parent;
+	}
+	public void setParent(String parent) {
+		this.parent = parent;
+	}
+	public String getBelong() {
+		return belong;
+	}
+	public void setBelong(String belong) {
+		this.belong = belong;
+	}
+
+	public String getXzqh_fullname() {
+		return xzqh_fullname;
+	}
+
+	public void setXzqh_fullname(String xzqh_fullname) {
+		this.xzqh_fullname = xzqh_fullname;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+	
+	
+}

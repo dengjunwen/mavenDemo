@@ -1,0 +1,67 @@
+package com.cgq.service;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.jpedal.exception.PdfException;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.cgq.model.Page;
+import com.cgq.model.Resource;
+import com.cgq.model.Task;
+
+/**
+ * @author zhangbin1
+ *  任务业务类
+ *
+ */
+public interface TaskService {
+
+	public List<Task> listAll();
+	
+	public Task queryTaskInfo(int taskid);
+
+	/**
+	 * 查找直播task第index步的资源
+	 * @param task
+	 * @param index
+	 * @return
+	 */
+	public Resource getLiveResource(Task task, Integer index);
+	
+	/**
+	 * 仅仅获取任务性情 
+	 * @param taskid
+	 * @return
+	 */
+	public Task queryTaskInfoForOnline(Integer taskid);
+	
+	/** 针对线上任务获取页面资源
+	 * @param taskid
+	 * @param index
+	 * @return
+	 */
+	public List<Page> queryTaskPageForOnline(Integer taskid,Integer userId, Integer index)  throws Exception;
+	
+	
+
+	/**
+	 * 列出所有可选的任务
+	 * @return
+	 */
+	public List<Task> listEffectiveTask();
+
+	/**
+	 * 添加直播任务 指定课件的大小
+	 * @param resourceid PDF文件对应的resourceid
+	 * @param taskname
+	 * @throws IOException 
+	 * @throws PdfException 
+	 */
+	public int addLiveTask(Integer resourceid, String taskname,int width,int height) throws IOException, PdfException;
+	
+	
+	
+	public void saveTask(Task task) throws Exception;
+}

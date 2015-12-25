@@ -1,0 +1,97 @@
+package com.cgq.model;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+/**
+ * Resource entity. @author MyEclipse Persistence Tools
+ */
+@Entity
+@Table(name = "t_resource", catalog = "xschool")
+public class Resource implements java.io.Serializable {
+
+	// Fields
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	private Integer source;
+	private String creattime;
+	/**
+	 * 资源类型 0：音频 1：视频 2：图片
+	 */
+	private Integer type;
+	private String url;
+
+	// Constructors
+	/** default constructor */
+	public Resource() {
+	}
+
+	/** minimal constructor */
+	public Resource(Integer id) {
+		this.id = id;
+	}
+
+	/** full constructor */
+	public Resource(Integer id, Integer source, String creattime, Integer type,
+			String url) {
+		this.id = id;
+		this.source = source;
+		this.creattime = creattime;
+		this.type = type;
+		this.url = url;
+	}
+
+	// Property accessors
+	public Integer getId() {
+		return this.id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	@Column(name = "source")
+	public Integer getSource() {
+		return this.source;
+	}
+
+	public void setSource(Integer source) {
+		this.source = source;
+	}
+
+	@Column(name = "creattime", length = 45)
+	public String getCreattime() {
+		return this.creattime;
+	}
+
+	public void setCreattime(String creattime) {
+		this.creattime = creattime;
+	}
+
+	/**
+	 * 资源类型 0：音频 1：视频 2：图片
+	 */
+	@Column(name = "type")
+	public Integer getType() {
+		return this.type;
+	}
+
+	public void setType(Integer type) {
+		this.type = type;
+	}
+
+	@Column(name = "url", length = 45)
+	public String getUrl() {
+		return this.url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+}

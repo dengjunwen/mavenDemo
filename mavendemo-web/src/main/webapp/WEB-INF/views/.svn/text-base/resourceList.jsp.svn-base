@@ -1,0 +1,217 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<style type="text/css">
+	.resource{width:60px;height:20px;cursor:pointer}
+	.resource1{width:200px;height:150px;cursor:pointer}
+</style>
+	<div class="modal fade" id="box-config2" tabindex="-1" role="dialog"
+			aria-labelledby="myModalLabel" aria-hidden="true" >
+			<div class="modal-dialog">
+				<div class="modal-content" style="width:700px;">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"
+							aria-hidden="true">&times;</button>
+						<h4 class="modal-title">资源列表</h4>
+					</div>
+					<div class="modal-body" >
+						<div class="box">
+							<div class="box-body">
+										<table id="datatable1" cellpadding="0" cellspacing="0"
+											border="0"
+											class="datatable table table-striped table-bordered table-hover">
+											<thead id="datatable_thead">
+												<tr>
+													<th >&nbsp;</th>
+													<th style="text-align:center;">资源id</th>
+													<th style="text-align:center;">来源</th>
+													<th style="text-align:center;">创建时间</th>
+													<th style="text-align:center;">资源类型</th>
+													<th style="text-align:center;">资源详情</th>
+												</tr>
+											</thead>
+											<tbody id="datatable_tbody">
+											</tbody>
+										</table>
+									</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default"  onclick="clearForm()">取消</button>
+						<button type="button" class="btn btn-primary" onclick="chooseRadio()">选择</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	<div  id ="Opendiv" class="openDiv" 
+		style="height:200px;width:300px;z-index:100001;display:none;position:absolute;background-color:white;text-align:center;padding:20px;border:1px solid #B4B4B4;align:center;" >
+			<img src ="${path}/img/div_close.png" style="float:right;cursor:pointer;margin-top:-30px;margin-right:-30px" onclick="closeDiv()"/>
+			<div id ="contentid" class="contentcla" style="background-color:white;height:160px;width:260px;overflow:hidden"></div>
+	</div>
+	
+<script type="text/javascript">
+	var filePath = "http://101.200.203.125:8088/static/";
+	var chooseObj ="";
+	var chooseBtn;
+	function setObj(t){
+		chooseObj = t;
+	}
+	
+	//清空表单关闭模态窗口窗口
+	function clearForm(){
+		$("#box-config2").modal('hide');
+	}
+	
+	function initResourceList(qt,chooseBt) {
+		chooseBtn = chooseBt;
+		if(qt){
+		}else{
+			qt=null;
+		}
+		$.post("${path}/resource/listResource",{source:"0",type:qt}, function(data) {
+					var oTable = $('#datatable1').dataTable();
+					if(oTable != null){
+						oTable.fnClearTable(false);  
+						oTable.fnDestroy();
+						$("#datatable_tbody").empty(); 
+					}
+				loadTableData(data);
+		}).done(function() {
+			//在数据加载完成后 初始化 分页
+			App.setPage("dynamic_table"); 
+			App.init();
+			
+		});
+	}
+	
+	//班级列表加载数据
+	function loadTableData(data) {
+		var teacherHtml = "";
+	 	$.each(data,function(i,t){
+			teacherHtml+="<tr>";
+			teacherHtml+="<td align='center'><input type='radio' name='radio' value='"+JSON.stringify(t)+"' onclick='setObj("+JSON.stringify(t)+")'/> </td>";
+			teacherHtml+="<td align='center'>" + t.id + "</td>";
+			teacherHtml+="<td align='center'>" + setSource(t.source) + "</td>";
+			teacherHtml+="<td align='center'>" + t.creattime + "</td>";
+			teacherHtml+="<td align='center'>" + setType(t.type) + "</td>";
+			teacherHtml+="<td align='center' >"+setFile(t.url)+"</td>";
+			teacherHtml+="</tr>";
+	 	});
+		$("#datatable_tbody").append(teacherHtml);
+	}
+	
+	function setSource(source){
+		var t ="";
+		if(source=="0"){
+			t="课件";
+		}else if(source=="1"){
+			t="用户头像";
+		}else if(source=="2"){
+			t="学生上传";
+		}else{
+			t="未知";
+		}
+		return t;
+	}
+	
+	function setType(type){
+		var t ="";
+		if(type=="0"){
+			t="音频";
+		}else if(type=="1"){
+			t="视频";
+		}else if(type=="2"){
+			t="图片";
+		}else{
+			t="类型未知";
+		}
+		return t;
+	}
+	
+	function setFile(url){
+		var html ="";
+		if(url.indexOf("mp3")>=0 || url.indexOf("MP3")>=0){
+			//html +="<audio src="+filePath+url+" controls='controls' class='resource' title='"+url+"' ></audio>";
+			html +="<img src='${path}/img/mp3.png' class='resource' title='"+url+"' style='width:24px;height:24px;' >";
+		}else if(url.indexOf("jpg")>=0 || url.indexOf("JPG")>=0){
+			html +="<img src="+filePath+url+" class='resource' title='"+url+"' onmouseover='openDiv(\""+url+"\")' onmouseout='closeDiv()'>";
+		}else if(url.indexOf("png")>=0 || url.indexOf("PNG")>=0){
+			html +="<img src="+filePath+url+" class='resource' title='"+url+"' onmouseover='openDiv(\""+url+"\")' onmouseout='closeDiv()'>";
+		}else if(url.indexOf("mp4")>=0 || url.indexOf("MP4")>=0){
+			html +="<img src='${path}/img/mp4.png' class='resource' title='"+url+"' style='width:24px;height:24px;' onmouseover='openDiv(\""+url+"\")' onmouseout='closeDiv()'>";
+			//html +="<video src="+filePath+url+" controls='controls' class='resource' title='"+url+"' poster='${path}/img/mp4.png'></video>";
+		}
+		html+="";
+		
+		return html;
+	}
+	
+	function chooseRadio(){
+		var chk = 0; 
+		var obj ="";
+		 var chkObjs = document.getElementsByName("radio");
+         for(var i=0;i<chkObjs.length;i++){
+             if(chkObjs[i].checked){
+                 chk = i;
+                 obj = chkObjs[i].value;
+                 break;
+             }
+         }
+         
+         
+         if(chooseObj){
+        	 if(chk>0){
+				var $div = $(chooseBtn).closest("div.form-group");  
+				$div.find("input.resourceId").val(chooseObj.id);
+				if(notEmpty($div.find("input[name='fileType']"))) $div.find("input[name='fileType']").val(chooseObj.type);
+				if(notEmpty($div.find("input[name='filePath']"))) $div.find("input[name='filePath']").val(filePath+chooseObj.url);
+				if(notEmpty($div.find("img")))$div.find("img").attr("src",filePath+chooseObj.url);
+			//obj = JSON.parse(obj); 
+                 $("#box-config2").modal('hide');
+             }else{
+            	 //$(".text").val("");
+            	 var $div = $(chooseBtn).closest("div.form-group");  
+				$div.find("input.resourceId").val(chooseObj.id);
+				if(notEmpty($div.find("input[name='fileType']"))) $div.find("input[name='fileType']").val(chooseObj.type);
+				if(notEmpty($div.find("input[name='filePath']"))) $div.find("input[name='filePath']").val(filePath+chooseObj.url);
+				if(notEmpty($div.find("img")))$div.find("img").attr("src",filePath+chooseObj.url);
+            	 
+            	 
+            	 //obj = JSON.parse(obj); 
+                 $(".text").val(JSON.stringify(chooseObj));
+                 $("#box-config2").modal('hide');
+             }
+         }else{
+        	 alert("请选择至少一条记录！");
+         }
+	}
+	
+	function openDiv(url){
+		var html ="";
+		var popupName=$(".openDiv");
+		var _scrollHeight = $(document).scrollTop(),//获取当前窗口距离页面顶部高度 
+		_windowHeight = $(window).height(),//获取当前窗口高度 
+		_windowWidth = $(window).width(),//获取当前窗口宽度 
+		_popupHeight = popupName.height(),//获取弹出层高度 
+		_popupWeight = popupName.width();//获取弹出层宽度 
+		_posiTop = (_windowHeight - _popupHeight)/2 + _scrollHeight; 
+		_posiLeft = (_windowWidth - _popupWeight)/2; 
+		
+		if(url.indexOf("mp3")>=0 || url.indexOf("MP3")>=0){
+			html +="<audio src="+filePath+url+" controls='controls'  autoplay='autoplay' class='resource1' title='"+url+"' ></audio>";
+		}else if(url.indexOf("jpg")>=0 || url.indexOf("JPG")>=0){
+			html +="<img src="+filePath+url+" class='resource1' title='"+url+"'>";
+		}else if(url.indexOf("png")>=0 || url.indexOf("PNG")>=0){
+			html +="<img src="+filePath+url+" class='resource1' title='"+url+"'>";
+		}else if(url.indexOf("mp4")>=0 || url.indexOf("MP4")>=0){
+			html +="<video src="+filePath+url+" controls='controls' autoplay='autoplay' class='resource1' title='"+url+"' poster='${path}/img/mp4.png'></video>";
+		}
+		$(".contentcla").html(html);
+		$(".openDiv").css({"left": _posiLeft + "px","top":_posiTop + "px"}).show("slow");//设置position 
+	}
+	
+	function closeDiv(){
+		$(".openDiv").hide();
+		return false;
+	}
+</script>

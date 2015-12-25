@@ -1,0 +1,19 @@
+package com.cgq.mapper;
+
+import java.util.List;
+
+import com.cgq.model.StudentTaskScore;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface StudentTaskScoreMapper extends Mapper<StudentTaskScore>{
+
+	/**
+	 * 以sutdent_task_history为左表关联评分表查询
+	 * @return
+	 */
+	List<StudentTaskScore> listStudentTaskHistory();
+
+	int updateStudentScoreByStudentidAndTaskid(StudentTaskScore studentTaskScore);
+
+}

@@ -1,0 +1,130 @@
+[
+    {
+        "id": 2, 
+        "title": "绗簩涓�", 
+        "rescount": 1, 
+        "blocks": [
+            {
+                "type": "vedio", 
+                "data": {
+                    "id": 4, 
+                    "date": "2015/12/22", 
+                    "title": "老梁的世界观", 
+                    "description": "梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界", 
+                    "category": "1", 
+                    "consumption": {
+                        "collectionCount": "1000", 
+                        "shareCount": "500", 
+                        "playCount": "100", 
+                        "replyCount": "8"
+                    }, 
+                    "cover": {
+                        "feed": "http://4", 
+                        "detail": "http://4", 
+                        "blurred": "http://4", 
+                        "sharing": "http://4"
+                    }, 
+                    "type": "vedio", 
+                    "url": "http://172.28.40.205:8080/cgq/mobile/test.mp4", 
+                    "height": "500", 
+                    "width": "400", 
+                    "vtype": "high", 
+                    "vtypename": "楂樻竻", 
+                    "count": 0, 
+                    "mainid": 2
+                }
+            }
+        ]
+    }, 
+    {
+        "id": 1, 
+        "title": "绗竴涓�", 
+        "rescount": 3, 
+        "blocks": [
+            {
+                "type": "pic", 
+                "data": {
+                    "id": 3, 
+                    "date": "2015/12/22", 
+                    "title": "老梁的世界观与人生观", 
+                    "description": "梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界", 
+                    "category": "0", 
+                    "consumption": {
+                        "collectionCount": "1000", 
+                        "shareCount": "500", 
+                        "playCount": "100", 
+                        "replyCount": "7"
+                    }, 
+                    "cover": {
+                        "feed": "http://3", 
+                        "detail": "http://3", 
+                        "blurred": "http://3", 
+                        "sharing": "http://3"
+                    }, 
+                    "type": "pic", 
+                    "url": "http://www.sina.com", 
+                    "detailurl": "http://www.163.com", 
+                    "count": 0, 
+                    "mainid": 1
+                }
+            }, 
+            {
+                "type": "audio", 
+                "data": {
+                    "id": 2, 
+                    "date": "2015/12/22", 
+                    "title": "老梁的世界观与人生观、价值观", 
+                    "description": "4234234234234234", 
+                    "category": "0", 
+                    "consumption": {
+                        "collectionCount": "1000", 
+                        "shareCount": "500", 
+                        "playCount": "100", 
+                        "replyCount": "6"
+                    }, 
+                    "cover": {
+                        "feed": "http://2", 
+                        "detail": "http://2", 
+                        "blurred": "http://2", 
+                        "sharing": "http://2"
+                    }, 
+                    "type": "audio", 
+                    "url": "http://172.28.40.205:8080/cgq/mobile/ccnn.mp3", 
+                    "detailurl": "http://172.28.40.205:8080/cgq/mobile/ccnn.lrc", 
+                    "count": 0, 
+                    "mainid": 1
+                }
+            }, 
+            {
+                "type": "vedio", 
+                "data": {
+                    "id": 1, 
+                    "date": "2015/12/22", 
+                    "title": "梁丹青看世界", 
+                    "description": "梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界梁丹青看世界", 
+                    "category": "0", 
+                    "consumption": {
+                        "collectionCount": "1000", 
+                        "shareCount": "500", 
+                        "playCount": "100", 
+                        "replyCount": "5"
+                    }, 
+                    "cover": {
+                        "feed": "http://1", 
+                        "detail": "http://1", 
+                        "blurred": "http://1", 
+                        "sharing": "http://1"
+                    }, 
+                    "type": "vedio", 
+                    "url": "http://172.28.40.205:8080/cgq/mobile/test.mp4", 
+                    "height": "500", 
+                    "width": "400", 
+                    "vtype": "nomal", 
+                    "vtypename": "鏍囨竻", 
+                    "count": 0, 
+                    "mainid": 1
+                }
+            }
+        ]
+    }
+]

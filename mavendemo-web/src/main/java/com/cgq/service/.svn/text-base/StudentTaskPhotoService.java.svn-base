@@ -1,0 +1,10 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.StudentTaskPhoto;
+
+public interface StudentTaskPhotoService {
+	
+		public List<StudentTaskPhoto> queryStudentTaskPhotoByTaskAndStudent(Integer taskId,Integer studentId);
+}

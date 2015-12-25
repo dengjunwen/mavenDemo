@@ -1,0 +1,78 @@
+package com.cgq.model;
+
+public class StudentLive extends Student {
+	private String seat; // 座位
+	private String groupid;// 小组主键
+	private int handstatus;// 举手状态 0没举手 1举手
+	private int micstatus;// 麦克风状态 0关 1开
+	private int isonline;// 在线状态 0不在线 1在线
+	private int energy;//学生能量
+
+	public StudentLive(){
+		super();
+	}
+	
+	public StudentLive(Student student,String seat,String groupid){
+		super();
+		this.groupid = groupid;
+		this.seat = seat;
+		this.setAddress(student.getAddress());
+		this.setAge(student.getAge());
+		this.setAreaId(student.getAreaId());
+		this.setAreaName(student.getAreaName());
+		this.setEnglishName(student.getEnglishName());
+		this.setId(student.getId());
+		this.setNickName(student.getNickName());
+		this.setSex(student.getSex());
+		this.setTelephone(student.getTelephone());
+	}
+	
+	public int getEnergy() {
+		return energy;
+	}
+
+	public void setEnergy(int energy) {
+		this.energy = energy;
+	}
+
+	public String getSeat() {
+		return seat;
+	}
+
+	public void setSeat(String seat) {
+		this.seat = seat;
+	}
+
+	public String getGroupid() {
+		return groupid;
+	}
+
+	public void setGroupid(String groupid) {
+		this.groupid = groupid;
+	}
+
+	public int getHandstatus() {
+		return handstatus;
+	}
+
+	public void setHandstatus(int handstatus) {
+		this.handstatus = handstatus;
+	}
+
+	public int getMicstatus() {
+		return micstatus;
+	}
+
+	public void setMicstatus(int micstatus) {
+		this.micstatus = micstatus;
+	}
+
+	public int getIsonline() {
+		return isonline;
+	}
+
+	public void setIsonline(int isonline) {
+		this.isonline = isonline;
+	}
+
+}

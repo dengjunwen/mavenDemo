@@ -1,0 +1,106 @@
+package com.cgq.model;
+
+import static javax.persistence.GenerationType.IDENTITY;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+/**
+ * @author zhangbin1
+ *
+ *上传记录
+ */
+@Entity
+@Table(name = "t_student_task_page_history")
+public class StudentTaskPageHistory {
+	
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name="id")
+	private Integer id;
+	@Column(name="taskid")
+	private Integer taskId;
+	@Column(name="page_index")
+	private Integer pageIndex;
+	@Column(name="t_resource_id")
+	private Integer resouceId;
+	@Column(name="t_student_id")
+	private Integer studentId;
+	@Column(name="answer")
+	private String answer;
+
+	/**
+	 * 0:无需完成任务，1.资源上传，2.提交选择题 3，提交文本
+	 */
+	@Column(name="task_type")
+	private Integer taskType;
+
+	@Column(name="sort_index")
+	private Integer sortIndex;
+	
+	@Column(name="use_time")
+	private Integer userTime;
+	public Integer getId() {
+		return id;
+	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	public Integer getTaskId() {
+		return taskId;
+	}
+	public void setTaskId(Integer taskId) {
+		this.taskId = taskId;
+	}
+	public Integer getResouceId() {
+		return resouceId;
+	}
+	public void setResouceId(Integer resouceId) {
+		this.resouceId = resouceId;
+	}
+	public Integer getStudentId() {
+		return studentId;
+	}
+	public void setStudentId(Integer studentId) {
+		this.studentId = studentId;
+	}
+	
+	public Integer getPageIndex() {
+		return pageIndex;
+	}
+	public void setPageIndex(Integer pageIndex) {
+		this.pageIndex = pageIndex;
+	}
+	public StudentTaskPageHistory() {
+		super();
+	}
+	public Integer getTaskType() {
+		return taskType;
+	}
+	public void setTaskType(Integer taskType) {
+		this.taskType = taskType;
+	}
+	public Integer getSortIndex() {
+		return sortIndex;
+	}
+	public void setSortIndex(Integer sortIndex) {
+		this.sortIndex = sortIndex;
+	}
+	public String getAnswer() {
+		return answer;
+	}
+	public void setAnswer(String answer) {
+		this.answer = answer;
+	}
+	public Integer getUserTime() {
+		return userTime;
+	}
+	public void setUserTime(Integer userTime) {
+		this.userTime = userTime;
+	}
+	
+	
+	
+}

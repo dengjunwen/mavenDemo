@@ -1,0 +1,47 @@
+package com.cgq.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.cgq.model.Resource;
+import com.cgq.service.ResourceService;
+
+@Controller
+@RequestMapping("/resource")
+public class ResourceController {
+
+	@Autowired
+	private ResourceService resourceService;
+	
+	Logger LOG = LoggerFactory.getLogger(ResourceController.class);
+	
+	@RequestMapping("/direct")
+	public Object directResource(){
+		return "resource";
+	}
+	
+	
+	@RequestMapping("/listResource")
+	@ResponseBody
+	public List<Resource> 
+	listResource(@RequestParam(value= "id", required = false) String id,
+				 @RequestParam(value= "source", required = false) Integer source,
+				 @RequestParam(value= "type", required = false) Integer type){
+		
+		Map<String,Object> map = new HashMap<String,Object>();
+		map.put("id", id);
+		map.put("source", source);
+		map.put("type", type);
+		return resourceService.queryResource(map);
+	} 
+	
+}

@@ -1,0 +1,13 @@
+package com.cgq.mapper;
+
+import java.util.List;
+
+import com.cgq.model.PageTask;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface PageTaskMapper extends Mapper<PageTask> {
+	
+	
+	List<PageTask>	getDistinctPageView();
+}

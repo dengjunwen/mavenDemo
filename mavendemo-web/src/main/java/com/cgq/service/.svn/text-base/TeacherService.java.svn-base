@@ -1,0 +1,42 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.Teacher;
+
+public interface TeacherService {
+	
+	
+	public int addTeacher(Teacher t) throws Exception;
+	
+	public int updateTeacher(Teacher t) throws Exception;
+	
+	public int deleteTeacher(Integer id) throws Exception;
+	
+	public List<Teacher> queryTeacher() ;
+
+	/**
+	 * 查询陪伴老师集合
+	 * @return
+	 */
+	public List<Teacher> queryCompanyTeacher();
+
+	public List<Teacher> queryForeignTeachers();
+
+	public Teacher queryTeacherInfo(Integer teacherid);
+
+	public Teacher queryTeacherByMobile(String mobile);
+	
+	public Teacher queryTeacherById(Integer id);
+
+	/**
+	 * 从已注册的学生用户中指定老师
+	 * 并从学生表中删除这条学生记录
+	 * @param studentid
+	 * @param type
+	 */
+	public void addTeacherFromUsers(String studentid, String type);
+	
+	
+	public Teacher queryTeacherByMobile(String mobile,String password);
+}

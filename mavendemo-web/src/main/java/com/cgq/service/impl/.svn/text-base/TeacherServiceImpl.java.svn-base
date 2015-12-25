@@ -1,0 +1,143 @@
+package com.cgq.service.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cgq.mapper.StudentMapper;
+import com.cgq.mapper.TeacherMapper;
+import com.cgq.model.Student;
+import com.cgq.model.Teacher;
+import com.cgq.model.TestRecord;
+import com.cgq.service.TeacherService;
+import com.cgq.util.Base64;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.ResultCode;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+@Service
+@Transactional
+public class TeacherServiceImpl implements TeacherService {
+
+	@Autowired
+	private TeacherMapper teacherMapper;
+	
+	@Autowired
+	private StudentMapper studentMapper;
+	
+	/**
+	 * 教师可使用
+	 */
+	private final static int TEACHER_TYPE_AVAILABLE = 1;
+	
+	/**
+	 * 教师不可使用
+	 */
+	private final static int TEACHER_TYPE_NOT_AVAILABLE = 0;
+	
+	@Override
+	public int addTeacher(Teacher t) throws Exception {
+		return teacherMapper.insert(t);
+	}
+
+	@Override
+	public int updateTeacher(Teacher t) throws Exception {
+		return teacherMapper.updateByPrimaryKey(t);
+	}
+
+	@Override
+	public int deleteTeacher(Integer id) throws Exception {
+		return teacherMapper.deleteByPrimaryKey(id);
+	}
+
+	@Override
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	public List<Teacher> queryTeacher() {
+		return teacherMapper.selectAll();
+	}
+
+	@Override
+	public List<Teacher> queryCompanyTeacher() {
+		// TODO Auto-generated method stub
+		Example record = new Example(Teacher.class);
+		Criteria criteria = record.createCriteria();
+		criteria.andEqualTo("type",1 );
+		return teacherMapper.selectByExample(record);
+	}
+
+	@Override
+	public List<Teacher> queryForeignTeachers() {
+		// TODO Auto-generated method stub
+		Example record = new Example(Teacher.class);
+		Criteria criteria = record.createCriteria();
+		criteria.andEqualTo("type",2 );
+		return teacherMapper.selectByExample(record);
+	}
+
+	@Override
+	public Teacher queryTeacherInfo(Integer teacherid) {
+		// TODO Auto-generated method stub
+		return teacherMapper.selectByPrimaryKey(teacherid);
+	}
+
+	@Override
+	public Teacher queryTeacherByMobile(String mobile) {
+		// TODO Auto-generated method stub
+		Example example = new Example(Teacher.class);
+		Criteria criteria =  example.createCriteria();
+		criteria.andEqualTo("telephone", mobile);
+		List<Teacher> teachers = teacherMapper.selectByExample(example);
+		if(teachers.size()>0){
+			for(Teacher teacher : teachers){
+				return teacher;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public Teacher queryTeacherById(Integer id) {
+		return teacherMapper.selectByPrimaryKey(id);
+	}
+
+	@Override
+	public void addTeacherFromUsers(String studentid, String type) {
+		// TODO Auto-generated method stub
+		Student student = studentMapper.selectByPrimaryKey(Integer.valueOf(studentid));
+		Teacher teacher = convertStudentToTeacher(student,type);
+		teacherMapper.insert(teacher);
+		studentMapper.deleteByPrimaryKey(Integer.valueOf(studentid));
+	}
+	
+	private Teacher convertStudentToTeacher(Student student, String type){
+		Teacher teacher = new Teacher();
+		teacher.setAddress(student.getAddress());
+		teacher.setAge(student.getAge());
+		teacher.setAreaId(student.getAreaId());
+		teacher.setAreaName(student.getAreaName());
+		teacher.setEnglishName(student.getEnglishName());
+		teacher.setNickName(student.getNickName());
+		teacher.setPassword(student.getPassword());
+		teacher.setPictureUrl(student.getPictureUrl());
+		teacher.setSex(student.getSex());
+		teacher.setStatus(TEACHER_TYPE_AVAILABLE+"");
+		teacher.setTelephone(student.getTelephone());
+		teacher.setType(Integer.valueOf(type));
+		return teacher;
+	}
+
+	@Override
+	public Teacher queryTeacherByMobile(String telephone, String password) {
+		Example e = new Example(Teacher.class);
+		Criteria criteria = e.createCriteria().andEqualTo("telephone",telephone).andEqualTo("password",Base64.encode(password.getBytes()));
+		List<Teacher> teachers = teacherMapper.selectByExample(e);
+		return CheckUtil.notEmpty(teachers)?teachers.get(0):null;
+	}
+
+}

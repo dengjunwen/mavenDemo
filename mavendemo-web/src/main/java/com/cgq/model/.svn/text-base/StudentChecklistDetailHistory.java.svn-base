@@ -1,0 +1,57 @@
+package com.cgq.model;
+
+import static javax.persistence.GenerationType.IDENTITY;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "t_student_checklist_detail_history", catalog = "xschool")
+public class StudentChecklistDetailHistory implements java.io.Serializable {
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	@Column(name = "studentid")
+	private Integer studentid;
+	@Column(name = "t_student_checklist_detail_id")
+	private Integer tStudentChecklistDetailId;
+	@Column(name = "checktime")
+	private String checktime;
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getStudentid() {
+		return studentid;
+	}
+
+	public void setStudentid(Integer studentid) {
+		this.studentid = studentid;
+	}
+
+	public Integer gettStudentChecklistDetailId() {
+		return tStudentChecklistDetailId;
+	}
+
+	public void settStudentChecklistDetailId(Integer tStudentChecklistDetailId) {
+		this.tStudentChecklistDetailId = tStudentChecklistDetailId;
+	}
+
+	public String getChecktime() {
+		return checktime;
+	}
+
+	public void setChecktime(String checktime) {
+		this.checktime = checktime;
+	}
+
+}

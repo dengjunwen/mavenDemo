@@ -1,0 +1,130 @@
+package com.cgq.service.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.ibatis.javassist.ClassMap;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cgq.mapper.ClassesMapper;
+import com.cgq.mapper.StudentClassMapper;
+import com.cgq.mapper.StudentMapper;
+import com.cgq.mapper.TeacherMapper;
+import com.cgq.model.Classes;
+import com.cgq.model.Student;
+import com.cgq.model.StudentClass;
+import com.cgq.model.Teacher;
+import com.cgq.service.ClassesService;
+import com.cgq.util.CheckUtil;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+
+@Service
+public class ClassesServiceImpl implements ClassesService{
+
+	@Autowired
+	private TeacherMapper teacherMapper;
+	
+	@Autowired
+	private ClassesMapper classesMapper;
+	
+	@Autowired
+	private StudentMapper studentMapper;
+	
+	@Autowired
+	private StudentClassMapper studentClassMapper;
+	
+	@Override
+	public List<Classes> listAll() {
+		// TODO Auto-generated method stub
+		return classesMapper.selectAll();
+	}
+
+	@Override
+	public int delById(int id) {
+		return classesMapper.deleteByPrimaryKey(id);
+	}
+
+	@Override
+	public int add(String className, String classLevel, String companyTeacherId) {
+		// TODO Auto-generated method stub
+		Classes addClass = new Classes();
+		addClass.setClassLevel(classLevel);
+		addClass.setClassName(className);
+		addClass.setCompanyTeacherId(Integer.valueOf(companyTeacherId));
+		//从数据库查询老师id对应的老师信息 再赋值给老师名称
+		Teacher teacher= teacherMapper.selectByPrimaryKey(Integer.valueOf(companyTeacherId));
+		addClass.setCompanyTeacherName(teacher == null?null:teacher.getEnglishName());
+		addClass.setTotalStudent(0);
+		return classesMapper.insert(addClass);
+	}
+
+	@Override
+	public List<Student> listStudentsInClass(String classid) {
+		// TODO Auto-generated method stub
+		return studentMapper.listStudentsByClassId(Integer.valueOf(classid));
+	}
+
+	private SimpleDateFormat yMdHmsDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	
+	@Override
+	public int rmStudentFromClass(int classid, int studentid) {
+		// TODO Auto-generated method stub
+		Example record = new Example(StudentClass.class);
+		Criteria criteria = record.createCriteria();
+		criteria.andEqualTo("classId", classid);
+		criteria.andEqualTo("studentId", studentid);
+		criteria.andEqualTo("status", "0");
+		//如果存在多条符合条件的记录则 将他们全部设为失效
+		List<StudentClass> studentclass = studentClassMapper.selectByExample(record);
+		int result = 0;
+		for(StudentClass t : studentclass){
+			Example record_update = new Example(StudentClass.class);
+			Criteria criteria_update = record_update.createCriteria();
+			criteria_update.andEqualTo("id", t.getId());
+			t.setStatus("1");//设为失效 
+			t.setUpdatetime(yMdHmsDateFormat.format(new Date()));
+			result += studentClassMapper.updateByExample(t, record_update);
+		}
+		return result;
+	}
+
+	@Override
+	public Classes querytById(String classid) {
+		// TODO Auto-generated method stub
+		return classesMapper.selectByPrimaryKey(Integer.valueOf(classid));
+	}
+
+	/**
+	 * 将多个学生分配到一个班级，学生id逗号隔开
+	 */
+	@Override
+	public int addStudentToClass(String studentids,String classesid) {
+		// TODO Auto-generated method stub
+		int result = 0;
+		Classes classes = classesMapper.selectByPrimaryKey(Integer.valueOf(classesid));
+		for(String studentid : studentids.split(",")){
+			StudentClass studentClass = new StudentClass();
+			studentClass.setClassId(Integer.valueOf(classesid));
+			studentClass.setStatus("0");
+			studentClass.setCompanyTeacherId(classes.getCompanyTeacherId());
+			studentClass.setStudentId(Integer.valueOf(studentid));
+			studentClass.setUpdatetime(yMdHmsDateFormat.format(new Date()));
+			result += studentClassMapper.insert(studentClass);
+		}
+		
+		return result;
+	}
+
+	@Override
+	public Classes querytByTeacherId(Integer teacherid) {
+		Example e = new Example(Classes.class);
+		Criteria criteria = e.createCriteria().andEqualTo("companyTeacherId","teacherid");
+		List<Classes>  list =  classesMapper.selectByExample(e);
+		return CheckUtil.notEmpty(list)&&list.size()!=0?list.get(0):null;
+	}
+
+}

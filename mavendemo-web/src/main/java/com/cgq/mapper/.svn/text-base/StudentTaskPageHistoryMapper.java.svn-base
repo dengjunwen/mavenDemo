@@ -1,0 +1,11 @@
+package com.cgq.mapper;
+
+import com.cgq.model.StudentTaskPageHistory;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface StudentTaskPageHistoryMapper extends Mapper<StudentTaskPageHistory> {
+	
+	
+	
+}

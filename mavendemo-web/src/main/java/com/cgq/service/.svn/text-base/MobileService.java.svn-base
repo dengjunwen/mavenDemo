@@ -1,0 +1,7 @@
+package com.cgq.service;
+
+public interface MobileService {
+
+	public void saveResource(byte[] base64,int source ,int filetype,Integer studentId,Integer taskId);
+	
+}

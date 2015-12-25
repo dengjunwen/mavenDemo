@@ -1,0 +1,169 @@
+package com.cgq.service.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cgq.mapper.StudentCheckListDetailMapper;
+import com.cgq.mapper.StudentCheckListMapper;
+import com.cgq.mapper.StudentChecklistDetailHistoryMapper;
+import com.cgq.model.StudentCheckList;
+import com.cgq.model.StudentCheckListDetail;
+import com.cgq.model.StudentChecklistDetailHistory;
+import com.cgq.service.StudentCheckListService;
+import com.cgq.util.DateProcess;
+
+import tk.mybatis.mapper.entity.Example;
+
+@Service
+@Transactional
+public class StudentCheckListServiceImpl implements StudentCheckListService {
+
+	@Autowired
+	private StudentCheckListMapper studentCheckListmapper;
+
+	@Autowired
+	private StudentCheckListDetailMapper studentCheckListDetailMapper;
+
+	@Autowired
+	private StudentChecklistDetailHistoryMapper studentChecklistDetailHistoryMapper;
+	
+	@Override
+	public List<StudentCheckList> listByStudentid(StudentCheckList studentCheckList) {
+		// TODO Auto-generated method stub
+		List<StudentCheckList> result = studentCheckListmapper.listByStudentidPager(studentCheckList);
+		for (StudentCheckList studentCheckListItem : result) {
+			Example e = new Example(StudentCheckListDetail.class);
+			e.createCriteria().andEqualTo("checkListId", studentCheckListItem.getId());
+			List<StudentCheckListDetail> studentCheckListDetails = studentCheckListDetailMapper.selectByExample(e);
+			studentCheckListItem.setStudentCheckListDetails(studentCheckListDetails);
+		}
+		return result;
+	}
+
+	@Override
+	public void saveUsedCheckList(String checklistid, String startdate, String enddate, String studentid) {
+		// TODO Auto-generated method stub
+		StudentCheckList studentCheckList = new StudentCheckList();
+		studentCheckList.setStartDate(startdate);
+		studentCheckList.setEndDate(enddate);
+		studentCheckList.setStudentid(Integer.valueOf(studentid));
+		studentCheckListmapper.insert(studentCheckList);
+		Integer studentCheckListid = studentCheckList.getId();
+		Example e = new Example(StudentCheckListDetail.class);
+		e.createCriteria().andEqualTo("checkListId", checklistid);
+		List<StudentCheckListDetail> studentCheckListDetails = studentCheckListDetailMapper.selectByExample(e);
+		for (StudentCheckListDetail studentCheckListDetail : studentCheckListDetails) {
+			studentCheckListDetail.setCheckListId(studentCheckListid);
+			studentCheckListDetail.setId(null);
+			studentCheckListDetailMapper.insert(studentCheckListDetail);
+		}
+	}
+
+	@Override
+	public void saveNewCheckList(String[] contentArr,String[] starttimeArr ,String[]endtimeArr,String startdate, String enddate, String studentid) {
+		// TODO Auto-generated method stub
+		StudentCheckList studentCheckList = new StudentCheckList();
+		studentCheckList.setStartDate(startdate);
+		studentCheckList.setEndDate(enddate);
+		studentCheckList.setStudentid(Integer.valueOf(studentid));
+		studentCheckListmapper.insert(studentCheckList);
+		Integer studentCheckListid = studentCheckList.getId();
+		for (int i = 0; i < contentArr.length; i++) {
+			StudentCheckListDetail studentCheckListDetail = new StudentCheckListDetail();
+			studentCheckListDetail.setId(null);
+			studentCheckListDetail.setCheckListId(studentCheckListid);
+			studentCheckListDetail.setContent(contentArr[i]);
+			studentCheckListDetail.setContentIndex(i + 1); // 学生清单详情序号从1开始
+			studentCheckListDetail.setStarttime(starttimeArr[i]);
+			studentCheckListDetail.setEndtime(endtimeArr[i]);
+			studentCheckListDetailMapper.insert(studentCheckListDetail);
+		}
+	}
+
+	@Override
+	public StudentCheckList listStudentNextWeekCheckList(String studentid) throws Exception {
+		// TODO Auto-generated method stub
+		Date nextMondy = DateProcess.getMonday(new Date());
+		SimpleDateFormat simplateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Example e = new Example(StudentCheckList.class);
+		e.createCriteria().andEqualTo("studentid", Integer.valueOf(studentid)).andGreaterThanOrEqualTo("startDate",
+				simplateFormat.format(nextMondy));
+		 e.setOrderByClause(" start_date asc");
+		List<StudentCheckList> result = studentCheckListmapper.selectByExample(e);
+		if(result == null || result.size()<1){
+			return null;
+		}
+		for(StudentCheckList studentCheckList : result){
+			Example studentCheckExample = new Example(StudentCheckListDetail.class);
+			studentCheckExample.createCriteria().andEqualTo("checkListId", studentCheckList.getId());
+			List<StudentCheckListDetail> studentCheckListDetails = studentCheckListDetailMapper.selectByExample(studentCheckExample);
+			studentCheckList.setStudentCheckListDetails(studentCheckListDetails);
+			return studentCheckList;
+		}
+		return null;
+	}
+
+	@Override
+	public StudentCheckList listStudentCurrentWeekCheckList(String studentid) {
+		// TODO Auto-generated method stub
+		Example e = new Example(StudentCheckList.class);
+		e.createCriteria().andEqualTo("studentid", Integer.valueOf(studentid)).andLessThanOrEqualTo("startDate",
+				DateProcess.toYMdStr(new Date())).andGreaterThanOrEqualTo("endDate", DateProcess.toYMdStr(new Date()));
+		 e.setOrderByClause(" start_date asc");
+		List<StudentCheckList> result = studentCheckListmapper.selectByExample(e);
+		if(result == null || result.size()<1){
+			return null;
+		}
+		for(StudentCheckList studentCheckList : result){
+			Example studentCheckExample = new Example(StudentCheckListDetail.class);
+			studentCheckExample.createCriteria().andEqualTo("checkListId", studentCheckList.getId());
+			List<StudentCheckListDetail> studentCheckListDetails = studentCheckListDetailMapper.selectByExample(studentCheckExample);
+			//检查这些任务中哪些当天已经完成
+			List<StudentChecklistDetailHistory> studentChecklistDetailHistorys = studentChecklistDetailHistoryMapper.selectStudentTodayHistory(studentid);
+			Set<Integer> checklistDetailIds = new HashSet<Integer>();
+			for(StudentChecklistDetailHistory studentChecklistDetailHistory : studentChecklistDetailHistorys){
+				checklistDetailIds.add(studentChecklistDetailHistory.gettStudentChecklistDetailId());
+			}
+			for(StudentCheckListDetail  studentCheckListDetail: studentCheckListDetails){
+				if(checklistDetailIds.contains(studentCheckListDetail.getId()))studentCheckListDetail.setIsDone(1);
+			}
+			studentCheckList.setStudentCheckListDetails(studentCheckListDetails);
+			return studentCheckList;
+		}
+		return null;
+	}
+
+	@Override
+	public void doneCheckListDetail(Integer checkListDetailId, Date date, Integer studentid) {
+		// TODO Auto-generated method stub
+		StudentChecklistDetailHistory studentChecklistDetailHistory = new StudentChecklistDetailHistory();
+		studentChecklistDetailHistory.setChecktime(DateProcess.toYMdHmsStr(date));
+		studentChecklistDetailHistory.setStudentid(studentid);
+		studentChecklistDetailHistory.settStudentChecklistDetailId(checkListDetailId);
+		studentChecklistDetailHistoryMapper.insert(studentChecklistDetailHistory);
+	}
+
+	@Override
+	public StudentCheckListDetail queryCheckListDeatailById(String detailid) {
+		// TODO Auto-generated method stub
+		return studentCheckListDetailMapper.selectByPrimaryKey(Integer.valueOf(detailid));
+	}
+
+	@Override
+	public void updateCheckListDetail(Integer id, String content, String starttime, String endtime) {
+		// TODO Auto-generated method stub
+		StudentCheckListDetail studentCheckListDetail = studentCheckListDetailMapper.selectByPrimaryKey(id);
+		studentCheckListDetail.setContent(content);
+		studentCheckListDetail.setStarttime(starttime);
+		studentCheckListDetail.setEndtime(endtime);
+		studentCheckListDetailMapper.updateByPrimaryKey(studentCheckListDetail);
+	}
+
+}

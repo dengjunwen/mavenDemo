@@ -1,0 +1,165 @@
+package com.cgq.service.impl;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.cgq.exception.NoAvailableMeetingroomException;
+import com.cgq.mapper.CourseMapper;
+import com.cgq.mapper.StudentMapper;
+import com.cgq.model.Course;
+import com.cgq.model.Group;
+import com.cgq.model.LiveCourse;
+import com.cgq.model.Meetingroom;
+import com.cgq.model.Student;
+import com.cgq.model.StudentLive;
+import com.cgq.service.CourseService;
+import com.cgq.service.LiveCourseService;
+import com.cgq.util.Base64;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+
+@Service
+public class LiveCourseServiceImpl implements LiveCourseService {
+
+	@Autowired
+	private CourseService courseService;
+
+	@Autowired
+	private CourseMapper courseMapper;
+
+	@Autowired
+	private StudentMapper studentMapper;
+
+	private static String GROUPID_A = "A";
+	private static String GROUPID_B = "B";
+	private static String[] seatStrArr = { "1", "2", "3", "4", "5", "6" };
+
+	private String coursewareurl = "http://101.200.203.125:8080/notice/video?";
+
+	
+	/**
+	 * 可用的直播室集合
+	 */
+	private static BlockingQueue<Meetingroom> availablemeetingrooms = new LinkedBlockingQueue<>();
+
+	private static final ResourceBundle bundle = ResourceBundle.getBundle("sysconf");
+	
+	// 在类加载的时候根据配置文件初始化直播室信息
+	static {
+		String[] meetingRoomArry = bundle.getString("meetingroom").split(";");
+		for (int i = 0; i < meetingRoomArry.length; i++) {
+			String meetingRoomSetting = meetingRoomArry[i];
+			String id = meetingRoomSetting.split(",")[0];
+			String roomName = meetingRoomSetting.split(",")[1];
+			String account = meetingRoomSetting.split(",")[2];
+			String passwd = meetingRoomSetting.split(",")[3];
+			availablemeetingrooms.add(new Meetingroom(id, roomName, account, passwd));
+		}
+	}
+
+	@Override
+	public LiveCourse instance(String courseid) throws Exception {
+		// TODO Auto-generated method stub
+		LiveCourse livecourse = new LiveCourse();
+		// 取一个空闲的meetingroom并移除队列,如果没有可用的会议室则抛出异常
+		Meetingroom meetingroom = availablemeetingrooms.poll();
+		if (meetingroom == null) {
+			throw new NoAvailableMeetingroomException("no more available meetingrooms");
+		}
+		try {
+			// 初始化两个小组对象
+			Group group1 = new Group();
+			group1.setGroupid(GROUPID_A);
+			group1.setGroupscore(0);
+			group1.setStatus(0);
+			Group group2 = new Group();
+			group2.setGroupid(GROUPID_B);
+			group2.setGroupscore(0);
+			group2.setStatus(0);
+			Set<Group> groupSet = new HashSet<>();
+			groupSet.add(group1);
+			groupSet.add(group2);
+			// 根据courseid查询学生ID集合
+			Set<Integer> studentidset = courseService.getStudentIdStrByCousrid(courseid + "");
+			Set<StudentLive> studentLiveSet = new HashSet<>();
+			int studentcount = 0;
+			for (Integer studentid : studentidset) {
+				// 学生组标识
+				String groupid = GROUPID_A;
+				// 前三个学生是A组
+				if (studentcount > 2)
+					groupid = GROUPID_B;
+				Student student = studentMapper.selectByPrimaryKey(studentid);
+				// 将Student对象转换为StudentLive对象 并补充属性
+				StudentLive studenglive = new StudentLive(student, seatStrArr[studentcount], groupid);
+				studentLiveSet.add(studenglive);
+				studentcount++;
+			}
+			// 拼装课件的请求路径coursewareurl
+			String wareurl = appendCourseWareUrl(coursewareurl, courseid + "");
+
+			livecourse.setCoursewareurl(wareurl);
+			livecourse.setGroupSet(groupSet);
+			livecourse.setMeetingroom(meetingroom);
+			livecourse.setStudentSet(studentLiveSet);
+		} catch (Exception e) {
+			// TODO: handle exception
+			freeMeetingRoom(meetingroom);
+			throw e;
+		} 
+		return livecourse;
+	}
+
+	/**
+	 * 拼装课件的请求路径coursewareurl
+	 * 
+	 * @param url
+	 * @param courseid
+	 * @return
+	 */
+	private String appendCourseWareUrl(String url, String courseid) {
+		Map<String, Object> param = new HashMap();
+		String studentids = null;
+		if (courseid != null) {
+			param.put("student", courseService.getStudentIdStrByCousrid(courseid));
+		}
+		Example record = new Example(Course.class);
+		Criteria criteria = record.createCriteria();
+		criteria.andEqualTo("courseId", courseid);
+		List<Course> result = courseMapper.selectByExample(record);
+		Course course = null;
+		for (Course courseitem : result) {
+			if (courseitem != null){
+				course = courseitem;
+				break;
+			}
+		}
+		param.put("teacher", course.getTeacherId());
+		param.put("taskid", course.getTaskId());
+		String paramJson = JSON.toJSONString(param);
+		String base64paramJson = Base64.encode(paramJson.getBytes());
+		return url + "param=" + base64paramJson;
+	}
+
+	/**
+	 * 释放占用的直播室
+	 */
+	@Override
+	public void freeMeetingRoom(Meetingroom meetingroom) {
+		// TODO Auto-generated method stub
+		if (meetingroom != null)
+			availablemeetingrooms.add(meetingroom);
+	}
+
+}

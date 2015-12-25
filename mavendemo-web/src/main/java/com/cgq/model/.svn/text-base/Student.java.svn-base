@@ -1,0 +1,171 @@
+package com.cgq.model;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import static javax.persistence.GenerationType.IDENTITY;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "t_student", catalog = "xschool")
+public class Student implements java.io.Serializable {
+
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	
+	private String nickName;
+	private String englishName;
+	private Integer sex;
+	private Integer age;
+	private Integer areaId;
+	private String areaName;
+	private String memo1; //中文名
+	private String memo2;//生日
+	private String address;
+	private String telephone;
+	private String password; 
+	@Column(name="picture_url")
+	private String pictureUrl;
+	
+	// Constructors
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	/** default constructor */
+	public Student() {
+	}
+
+	/** full constructor */
+	public Student(String nickName, String englishName, Integer sex,
+			Integer age, Integer areaId, String areaName, String memo1,
+			String memo2, String address,String telephone) {
+		this.nickName = nickName;
+		this.englishName = englishName;
+		this.sex = sex;
+		this.age = age;
+		this.areaId = areaId;
+		this.areaName = areaName;
+		this.memo1 = memo1;
+		this.memo2 = memo2;
+		this.address = address;
+		this.telephone = telephone;
+	}
+
+	// Property accessors
+	public Integer getId() {
+		return this.id;
+	}
+
+	@Column(name = "telephone", length = 45)
+	public String getTelephone() {
+		return telephone;
+	}
+
+	public void setTelephone(String telephone) {
+		this.telephone = telephone;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	@Column(name = "nick_name", length = 45)
+	public String getNickName() {
+		return this.nickName;
+	}
+
+	public void setNickName(String nickName) {
+		this.nickName = nickName;
+	}
+
+	@Column(name = "english_name", length = 45)
+	public String getEnglishName() {
+		return this.englishName;
+	}
+
+	public void setEnglishName(String englishName) {
+		this.englishName = englishName;
+	}
+
+	@Column(name = "sex", length = 1)
+	public Integer getSex() {
+		return this.sex;
+	}
+
+	public void setSex(Integer sex) {
+		this.sex = sex;
+	}
+
+	@Column(name = "age")
+	public Integer getAge() {
+		return this.age;
+	}
+
+	public void setAge(Integer age) {
+		this.age = age;
+	}
+
+	@Column(name = "area_id")
+	public Integer getAreaId() {
+		return this.areaId;
+	}
+
+	public void setAreaId(Integer areaId) {
+		this.areaId = areaId;
+	}
+
+	@Column(name = "area_name", length = 45)
+	public String getAreaName() {
+		return this.areaName;
+	}
+
+	public void setAreaName(String areaName) {
+		this.areaName = areaName;
+	}
+
+	@Column(name = "memo1", length = 45)
+	public String getMemo1() {
+		return this.memo1;
+	}
+
+	public void setMemo1(String memo1) {
+		this.memo1 = memo1;
+	}
+
+	@Column(name = "memo2", length = 45)
+	public String getMemo2() {
+		return this.memo2;
+	}
+
+	public void setMemo2(String memo2) {
+		this.memo2 = memo2;
+	}
+
+	@Column(name = "address", length = 45)
+	public String getAddress() {
+		return this.address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public String getPictureUrl() {
+		return pictureUrl;
+	}
+
+	public void setPictureUrl(String pictureUrl) {
+		this.pictureUrl = pictureUrl;
+	}
+	
+	
+	
+}

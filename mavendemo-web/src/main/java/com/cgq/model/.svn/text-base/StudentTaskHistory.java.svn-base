@@ -1,0 +1,143 @@
+package com.cgq.model;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+/**
+ * @author zhangbin1
+ *		学生任务记录 
+ */
+@Entity
+@Table(name = "t_student_task_history", catalog = "xschool")
+public class StudentTaskHistory implements java.io.Serializable {
+
+	// Fields
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	private Integer pageIndex;
+	private String updatetime;
+	private Integer TTaskId;
+	private Integer status;
+	@Column(name="t_student_id")
+	private Integer studentId;
+	@Column(name="task_type")
+	private Integer taskType;
+	@Transient
+	private String taskName;
+	@Transient
+	private String studentNickName;
+	@Transient
+	private String sudentTelephone;
+	// Constructors
+
+	/** default constructor */
+	public StudentTaskHistory() {
+	}
+
+	// Property accessors
+	public Integer getId() {
+		return this.id;
+	}
+
+	public String getSudentTelephone() {
+		return sudentTelephone;
+	}
+
+	public void setSudentTelephone(String sudentTelephone) {
+		this.sudentTelephone = sudentTelephone;
+	}
+
+	public String getStudentNickName() {
+		return studentNickName;
+	}
+
+	public void setStudentNickName(String studentNickName) {
+		this.studentNickName = studentNickName;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	@Column(name = "page_index", length = 45)
+	public Integer getPageIndex() {
+		return pageIndex;
+	}
+	
+	public void setPageIndex(Integer pageIndex) {
+		this.pageIndex = pageIndex;
+	}
+	
+
+	@Column(name = "updatetime", length = 45)
+	public String getUpdatetime() {
+		return this.updatetime;
+	}
+
+
+	public void setUpdatetime(String updatetime) {
+		this.updatetime = updatetime;
+	}
+
+	@Column(name = "t_task_id", nullable = false)
+	public Integer getTTaskId() {
+		return this.TTaskId;
+	}
+
+	public void setTTaskId(Integer TTaskId) {
+		this.TTaskId = TTaskId;
+	}
+
+	@Column(name = "status", length = 45)
+	public Integer getStatus() {
+		return this.status;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	public Integer getStudentId() {
+		return studentId;
+	}
+
+	public void setStudentId(Integer studentId) {
+		this.studentId = studentId;
+	}
+
+	public Integer getTaskType() {
+		return taskType;
+	}
+
+	public void setTaskType(Integer taskType) {
+		this.taskType = taskType;
+	}
+
+	public StudentTaskHistory(Integer id, Integer pageIndex, String updatetime, Integer tTaskId, Integer status,
+			Integer studentId, Integer taskType) {
+		super();
+		this.id = id;
+		this.pageIndex = pageIndex;
+		this.updatetime = updatetime;
+		TTaskId = tTaskId;
+		this.status = status;
+		this.studentId = studentId;
+		this.taskType = taskType;
+	}
+
+	public String getTaskName() {
+		return taskName;
+	}
+
+	public void setTaskName(String taskName) {
+		this.taskName = taskName;
+	}
+	
+	
+
+}

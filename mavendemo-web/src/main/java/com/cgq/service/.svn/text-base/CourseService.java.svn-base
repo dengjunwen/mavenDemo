@@ -1,0 +1,44 @@
+package com.cgq.service;
+
+import java.util.List;
+import java.util.Set;
+
+import com.cgq.model.Course;
+import com.cgq.model.Task;
+
+/**
+ * @author zhangbin1
+ *
+ */
+public interface CourseService {
+	
+	/**
+	 * 获取结束时间在当前时间之后且开始时间最早的课程
+	 * @param userid
+	 * @param usertype 用户类型 0 学生 1老师
+	 * @return
+	 */
+	public Course getUserCurrentTask(int userid, Integer usertype);
+
+	/**
+	 * 获取课程的所有学生id
+	 * @param courseid
+	 * @return
+	 */
+	public Set<Integer> getStudentIdStrByCousrid(String courseid);
+
+	public int addCourse(String classid, String date, String taskid, String teacherid, String coursename,
+			String endtime, String starttime);
+
+	public List<Course> listCourseByClassid(String classid);
+
+	public String listCourseCalendarJSONByClassid(String classid);
+
+	public int delcourse(String classid, String courseid);
+	
+	public Task getTaskByCourseid(String courseid);
+	
+	public List<Course> getListCourse(Integer teacherId,Integer userType);
+	
+	public List<Course> getCourseByStudentId(Integer studentId);
+}

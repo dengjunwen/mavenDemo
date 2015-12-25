@@ -1,0 +1,608 @@
+package com.cgq.controller;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.cgq.exception.MobileNotExistsException;
+import com.cgq.model.Course;
+import com.cgq.model.Reward;
+import com.cgq.model.Student;
+import com.cgq.model.StudentCheckList;
+import com.cgq.model.StudentTaskPhoto;
+import com.cgq.model.StudentTaskScore;
+import com.cgq.model.Task;
+import com.cgq.model.Teacher;
+import com.cgq.service.CourseService;
+import com.cgq.service.MobileService;
+import com.cgq.service.RewardService;
+import com.cgq.service.StudentCheckListService;
+import com.cgq.service.StudentService;
+import com.cgq.service.StudentTaskPhotoService;
+import com.cgq.service.StudentTaskScoreService;
+import com.cgq.service.TaskService;
+import com.cgq.service.TeacherService;
+import com.cgq.util.Base64;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.RedisCache;
+import com.cgq.util.DateProcess;
+import com.cgq.util.ResultCode;
+import com.cloopen.rest.sdk.utils.encoder.BASE64Decoder;
+import com.google.common.collect.Maps;
+
+/**
+ * @author zhangbin1
+ *
+ */
+@RequestMapping("/mobile")
+@Controller
+public class MobileController {
+
+	/**
+	 *记录获奖情况业务类
+	 */
+	@Autowired
+	private RewardService rewardService;
+	@Autowired
+	private TeacherService teacherService;
+	@Autowired
+	private CourseService courseService;
+	@Autowired
+	private StudentService studentService;
+	@Autowired
+	private StudentCheckListService studentCheckListService;
+	@Autowired
+	private TaskService taskService;
+	@Autowired
+	private StudentTaskPhotoService studentTaskPhotoService;
+	@Autowired
+	private StudentTaskScoreService studentTaskScoreService;
+	
+	
+	
+	Logger LOG = LoggerFactory.getLogger(MobileController.class);
+	
+	@Autowired
+	private MobileService mobileService;
+	
+	@RequestMapping("/direct")
+	public Object directTree(){
+		return "mobile/login";
+	}
+
+	@RequestMapping("/register")
+	public Object register(){
+		return "mobile/register";
+	}
+	
+	@RequestMapping("/forgetPwd")
+	public Object forgetPwd(){
+		return "mobile/forgetPwd";
+	}
+	
+	@RequestMapping("/courceList")
+	public Object courceList(){
+		return "mobile/courceList";
+	}
+	
+	@RequestMapping("/chooseCourse")
+	public Object chooseCourse(){
+		return "mobile/chooseCourse";
+	}
+	
+	@RequestMapping("/chooseTeacher")
+	public Object chooseTeacher(){
+		return "mobile/chooseTeacher";
+	}
+	
+	@RequestMapping("/chooseOperations")
+	public Object chooseOperations(){
+		return "mobile/chooseOperations";
+	}
+	
+	@RequestMapping("/performEvaluation")
+	public Object performEvaluation(){
+		return "mobile/performEvaluation";
+	}
+	
+	@RequestMapping("/courseBack")
+	public Object courseBack(){
+		return "mobile/courseBack";
+	}
+	
+	@RequestMapping("/search")
+	public Object search(){
+		return "mobile/search";
+	}
+	
+	@RequestMapping("/info")
+	public Object info(){
+		return "mobile/info";
+	}
+	
+	@RequestMapping("/uploadPic")
+	public Object uploadPic(){
+		return "mobile/uploadPic";
+	}
+	
+	@RequestMapping("/parentMenu")
+	public ModelAndView  toParentMenu(Integer studentId){
+		ModelAndView view = new ModelAndView("mobile/parent/parentMenu");
+		view.addObject("studentId", studentId);
+		return  view;
+	}
+	
+	@RequestMapping("/toParentMenu")
+	public ModelAndView  toParentMenu(HttpServletRequest request){
+		ModelAndView view = new ModelAndView("mobile/parent/parentMenu");
+		view.addObject("studentId", request.getSession().getAttribute("studentId"));
+		return  view;
+	}
+	
+	@RequestMapping("/toDailyCheck")
+	public ModelAndView toDailyCheck(HttpServletRequest request){
+		ModelAndView view = new ModelAndView("mobile/checklist/dailyCheck");
+		StudentCheckList studentCheckList = null;
+		try {
+			Integer studentid = (Integer) request.getSession().getAttribute("studentId");
+			studentCheckList= studentCheckListService.listStudentCurrentWeekCheckList(studentid.toString());
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		view.addObject("studentCheckList", studentCheckList);
+		return view;
+	}
+	
+	@RequestMapping("/toAddWeekCheckList")
+	public ModelAndView toAddWeekCheckList(HttpServletRequest request){
+		//查询当前用户是否已有下周的清单
+		Integer studentid = (Integer) request.getSession().getAttribute("studentId");
+		StudentCheckList studentCheckList = null;
+		try {
+			studentCheckList= studentCheckListService.listStudentNextWeekCheckList(studentid.toString());
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		//没有清单返回创建页
+		if(studentCheckList ==  null) {
+			ModelAndView result = new ModelAndView("mobile/checklist/addWeekCheckList");
+			Date startdate = DateProcess.getMonday(new Date());
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(startdate);
+			cal.add(Calendar.DAY_OF_MONTH, 6);
+			Date enddate = cal.getTime();
+			result.addObject("startdate", DateProcess.toYMdHmsStr(startdate).substring(5, 10));
+			result.addObject("enddate", DateProcess.toYMdHmsStr(enddate).substring(5, 10));
+			return result;
+		}
+		else{
+			ModelAndView result = new ModelAndView("mobile/checklist/showWeekCheckList");
+			result.addObject("studentCheckList", studentCheckList);
+			return result;
+		}
+	}
+	
+	@RequestMapping("/toCreatDailyCheckList")
+	public ModelAndView toDailyCheckList(){
+		ModelAndView result = new ModelAndView("mobile/checklist/addDailyCheckList");
+		Date startdate = DateProcess.getMonday(new Date());
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(startdate);
+		cal.add(Calendar.DAY_OF_MONTH, 6);
+		Date enddate = cal.getTime();
+		result.addObject("startdate", DateProcess.toYMdHmsStr(startdate).substring(0, 10));
+		result.addObject("enddate", DateProcess.toYMdHmsStr(enddate).substring(0, 10));
+		return result;
+	}
+	
+	@RequestMapping("/toPickDailyCheckList")
+	public ModelAndView toPickDailyCheckList(){
+		ModelAndView result = new ModelAndView("mobile/checklist/pickDailyCheckList");
+		Date startdate = DateProcess.getMonday(new Date());
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(startdate);
+		cal.add(Calendar.DAY_OF_MONTH, 6);
+		Date enddate = cal.getTime();
+		result.addObject("startdate", DateProcess.toYMdHmsStr(startdate).substring(0, 10));
+		result.addObject("enddate", DateProcess.toYMdHmsStr(enddate).substring(0, 10));
+		return result;
+	}
+	
+	@RequestMapping("/getCountEnergy")
+	@ResponseBody
+	public Map<String,Object> getCountEnergy(Integer userid,Integer taskId){
+		Map<String,Object> data = Maps.newHashMap();
+		List<Reward> list = 	rewardService.queryRewardByUserIdAndTaskId(userid, taskId);
+		data.put("count", CheckUtil.notEmpty(list)?list.size():0);
+		data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		return data;
+	}
+	
+	
+	/**
+	 * teacher登录页面  
+	 * 教师相关操作
+	 * @return
+	 */
+	@RequestMapping("/tlogin")
+	public String loginIndex(){
+		return "mobile/teacher/login";
+	}
+	
+	
+	@RequestMapping("/tLoginAction")
+	@ResponseBody
+	public Map<String,Object> teacherLoginByH5(String telephone,String password){
+		Map<String,Object> data = Maps.newHashMap();
+		
+		if(CheckUtil.isEmpty(telephone)||CheckUtil.isEmpty(password)){
+    		data.put("code", ResultCode.RESULT_CODE_ERROR); 
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG); 
+			return data;
+    	}
+		
+		Teacher t = teacherService.queryTeacherByMobile(telephone, password);
+		if(CheckUtil.notEmpty(t)){
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+			data.put("teacher", t);
+		}else{
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return data;
+	}
+	
+	
+	/**老师获取管理的课程
+	 * @param userType
+	 * @param userId
+	 * @return
+	 */
+	@RequestMapping("/teacher/chooseCourse")
+	public ModelAndView chooseCourse(Integer userType,Integer userId){
+		ModelAndView view = new ModelAndView("mobile/teacher/chooseCourse");
+		List<Course> course = courseService.getListCourse(userId, userType);
+		view.addObject("course", course);
+		view.addObject("userType",userType);
+		view.addObject("userId",userId);
+		return view;
+	}
+	
+	
+	/**老师获取学生列表
+	 * @param taskid
+	 * @param classid
+	 * @return
+	 */
+	@RequestMapping("/teacher/studentlist")
+	public ModelAndView chooseStudentList(Integer taskid,Integer classid){
+		ModelAndView view = new ModelAndView("mobile/teacher/chooseStudent");
+		List<Student> students = studentService.queryStudentByTaskIdAndCourseId(taskid, classid);
+		view.addObject("students", students);
+		view.addObject("taskid", taskid);
+		view.addObject("classid", classid);
+		return view;
+	}
+	
+	
+	/**拍照上传做评价
+	 * @param studentId
+	 * @param taskId
+	 * @param classId
+	 * @return
+	 */
+	@RequestMapping("/teacher/camera/{studentId}/{taskId}/{classId}")
+	public ModelAndView camera(@PathVariable("studentId")Integer studentId,@PathVariable("taskId")Integer taskId,@PathVariable("classId")Integer classId){
+		List<StudentTaskPhoto> list = 	studentTaskPhotoService.queryStudentTaskPhotoByTaskAndStudent(taskId, studentId);
+		ModelAndView view = new ModelAndView("mobile/teacher/camera");
+		if(CheckUtil.notEmpty(list)&&list.size()!=0){
+			view.setViewName("mobile/teacher/performEvaluation");
+			Task taskInfo = taskService.queryTaskInfo(taskId);
+			view.addObject("taskInfo", taskInfo);
+		}
+		view.addObject("StudentTaskPhotoes", list);
+		view.addObject("studentId", studentId);
+		view.addObject("taskId", taskId);
+		view.addObject("classId", classId);
+		return view;
+	}
+	@RequestMapping(value="/uploadAction",method=RequestMethod.POST)
+	@ResponseBody
+	public Map<String,Object> uploadAction(@RequestParam(value="Base64",required = true)String Base64,Integer studentId,Integer taskId){
+		 Map<String,Object> data = Maps.newHashMap();
+			try   
+		    {  
+				JSONArray array = JSONArray.parseArray(Base64);
+				if(array!=null && array.size()>0){
+					for(int i=0;i<array.size();i++){
+						JSONObject dyObj = array.getJSONObject(i);
+						String txt = "";
+						if(dyObj.containsKey("txt")){
+							txt = dyObj.getString("txt");
+						}
+						//System.out.println(id);
+						//System.out.println(txt);
+						arrayElement(txt,studentId,taskId);
+					}
+				}
+				//forArray(Base64);
+			 	data.put("code",ResultCode.RESULT_CODE_SUCCESS);
+				data.put("msg",ResultCode.RESULT_CODE_SUCCESS_MSG);
+		    }
+					catch (Exception e)   
+		    {
+			 data.put("code",ResultCode.RESULT_CODE_ERROR);
+			 data.put("msg",ResultCode.RESULT_CODE_ERROR_MSG);
+			 e.printStackTrace();
+		    }
+		
+		return data;
+	}
+	
+	
+	public void arrayElement(String ele,Integer studentId,Integer taskId) throws IOException{
+		if(!ele.equals("") && ele!=null
+				&& !ele.equals("\"") && !ele.equals("[\"")){
+			String base64="";
+			base64=ele.replace("data:image/jpeg;base64,", "")
+			.replace("data:image/png;base64,", "")
+			.replace("data:image/jpg;base64,", "")
+			.replace("data:image/gif;base64,", "");
+			BASE64Decoder decoder = new BASE64Decoder();
+			byte[] _base64 = decoder.decodeBuffer(base64);
+		 	mobileService.saveResource(_base64, 3, ResultCode.RESOURCE_TYPE_IMG,studentId,taskId);
+		}
+	}
+	
+	
+	/*public void forArray(String[] Base64) throws IOException{
+		
+		if(Base64!=null && Base64.length>0){
+			for(int i=0;i<Base64.length;i++){
+				
+				if(!Base64[i].equals("") && Base64[i]!=null 
+						&& !Base64[i].equals("\"") && !Base64[i].equals("[\"")){
+					
+					String base64="";
+					base64=Base64[i].replace("data:image/jpeg;base64,", "")
+					.replace("data:image/png;base64,", "")
+					.replace("data:image/jpg;base64,", "")
+					.replace("data:image/gif;base64,", "");
+					
+					BASE64Decoder decoder = new BASE64Decoder();
+					byte[] _base64 = decoder.decodeBuffer(base64);
+				 	mobileService.saveResource(_base64, 0, 2);
+				}
+				
+			}
+		}else{
+			
+			if(!Base64[0].equals("") && Base64[0]!=null
+					&& !Base64[0].equals("\"") && !Base64[0].equals("[\"")){
+				String base64="";	
+				base64=Base64[0].replace("data:image/jpeg;base64,", "")
+				.replace("data:image/png;base64,", "")
+				.replace("data:image/jpg;base64,", "")
+				.replace("data:image/gif;base64,", "");
+				
+				BASE64Decoder decoder = new BASE64Decoder();
+				byte[] _base64 = decoder.decodeBuffer(base64);
+			 	mobileService.saveResource(_base64, 0, 2);
+			}
+			
+		}
+	}*/
+	//base64字符串转化成图片  
+    public static boolean GenerateImage(String imgStr)  
+    {   //对字节数组字符串进行Base64解码并生成图片  
+        if (imgStr == null) {
+        	 return false;  
+        }
+        BASE64Decoder decoder = new BASE64Decoder();  
+        try   
+        {  
+            byte[] b = decoder.decodeBuffer(imgStr);  
+            String imgFilePath = "d://img//222.jpg";//新生成的图片  
+            OutputStream out = new FileOutputStream(imgFilePath);      
+            out.write(b);  
+            out.flush();  
+            out.close();  
+            return true;  
+        }   
+        catch (Exception e)   
+        {  
+            return false;  
+        }  
+    }  
+    /**
+     * 家长端
+     */
+    @RequestMapping("/plogin")
+    public String  parentLoginIndex(){
+    	return "mobile/parent/login";
+    }
+    
+    @RequestMapping("/ploginaction")
+    @ResponseBody
+    public Map<String,Object> parentLoginAction(String telephone,String password,HttpServletRequest request){
+    	Map<String,Object> data = Maps.newHashMap();
+    	
+    	if(CheckUtil.isEmpty(telephone)||CheckUtil.isEmpty(password)){
+    		data.put("code", ResultCode.RESULT_CODE_ERROR); 
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG); 
+			return data;
+    	}
+    		Student student = 	studentService.queryStudentByMolie(telephone);	
+    		if(CheckUtil.notEmpty(student)){
+    			if(student.getPassword().equals(Base64.encode(password.getBytes()))){
+    				// 登录成功
+    				data.put("studentId", student.getId());
+    				request.getSession().setAttribute("studentId",student.getId());
+    				data.put("code", ResultCode.RESULT_CODE_SUCCESS); 
+    				data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG); 
+    			}else{
+    				data.put("code", ResultCode.RESULT_CODE_ERROR); 
+    				data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG); 
+    			}
+    		}else{
+    			data.put("code", ResultCode.RESULT_CODE_ERROR); 
+				data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG); 
+    		}
+    		return data;
+    }
+    @RequestMapping("/parent/chooseCourse")
+    public ModelAndView getEvaluateCourses(Integer studentId){
+    	ModelAndView view = new ModelAndView("mobile/parent/chooseCourse");
+    	List<Course> course =  courseService.getCourseByStudentId(studentId);
+    	view.addObject("course", course);
+    	view.addObject("studentId", studentId);
+    	return view;
+    }
+    @RequestMapping("/parent/getEvaluatePhoto")
+    public ModelAndView getEvaluatePhoto(Integer studentId,Integer taskId){
+    	ModelAndView view = new ModelAndView("mobile/parent/performEvaluation");
+    	//1.课程简介
+    	Task taskInfo = taskService.queryTaskInfo(taskId);
+    	//2.个人头像   ， 能量棒的个数
+    	Student student = studentService.queryStudentById(studentId);
+    	//3.成长记录
+    	List<StudentTaskPhoto>  StudentTaskPhotoes =  studentTaskPhotoService.queryStudentTaskPhotoByTaskAndStudent(taskId, studentId);
+    	//4.综合评测。
+    	StudentTaskScore  studentTaskScore =   studentTaskScoreService.getStudentTaskScoreByStudentIdAndTaskId(studentId, taskId);
+    	view.addObject("taskInfo", taskInfo);
+    	view.addObject("student", student);
+    	view.addObject("StudentTaskPhotoes", StudentTaskPhotoes);
+    	view.addObject("studentTaskScore", studentTaskScore);
+    	view.addObject("studentId", studentId);
+    	return view;
+    }
+    @RequestMapping("/parent/professionEvaluate")
+    public Map<String,Object> professionalEvaluation(Integer taskId,Integer studentId){
+    	Map<String,Object> datas = Maps.newHashMap();
+    	StudentTaskScore  studentTaskScore =   studentTaskScoreService.getStudentTaskScoreByStudentIdAndTaskId(studentId, taskId);
+    	datas.put("studentTaskScore", studentTaskScore);
+    	return datas;
+    }
+    
+    /**
+     * 运营端  operate 相关的为运营人员看到的页面
+     */
+    
+    @RequestMapping("/ologin")
+    public String  operateLoginIndex(){
+    	return "mobile/operate/login";
+    }
+	@RequestMapping("/operate/search")
+	public String operateSearch(){
+		return "mobile/operate/search";
+	}
+    @RequestMapping("/operate/chooseStudent")
+    public ModelAndView searchStudents(String studentName){
+		ModelAndView view = new ModelAndView("mobile/operate/chooseStudent");
+		List<Student> students = studentService.queryStudentByName(studentName);
+		view.addObject("students", students);
+		view.addObject("studentName", studentName);
+		return view;
+    }
+
+    /** 返回忘记密码页面
+     * @param type
+     * @return
+     */
+    @RequestMapping("/{type}/forgetPwd")
+   public String getRegisterView(@PathVariable String type){
+    	return "mobile/"+type+"/forgetPwd";
+    }
+    
+    @RequestMapping("/forgetPwdAction")
+    @ResponseBody
+    public Map<String,Object> forgetPwdAction(String telephoneNum,String password,String varifycode){
+    	Map<String,Object> result = Maps.newHashMap();
+		LOG.info("mobile:" + telephoneNum);
+		LOG.info("passwd:" + password);
+		try {
+			String varifycode_cache = RedisCache.getValue(telephoneNum);
+			if(varifycode== null||varifycode_cache == null){
+				result.put("code",ResultCode.RESULT_CODE_ERROR);
+				result.put("msg",ResultCode.RESULT_CODE_ERROR_MSG);
+			 	return  result;
+			}else{
+				if(!varifycode.equals(varifycode_cache)){
+					//验证码不相同
+				result.put("code",ResultCode.RESULT_CODE_ERROR);
+				result.put("msg",ResultCode.RESULT_CODE_ERROR_MSG);
+			 	return  result;
+				}
+		 }
+			
+			String userid = null;
+			String usertype = null;
+			//根据手机号在学生表里查询
+			Student student = studentService.queryStudentByMolie(telephoneNum);
+			if(student == null){
+				//在老师表中查询
+				Teacher teacher = teacherService.queryTeacherByMobile(telephoneNum);
+				if(teacher!=null){
+					userid = teacher.getId()+"";
+					usertype  = ResultCode.USER_TYPE_TEACHER+"";
+					teacher.setPassword(Base64.encode(password.getBytes()));
+					teacherService.updateTeacher(teacher);
+				}
+				result.put("teacher", teacher);
+			}else{
+				userid = student.getId()+"";
+				usertype = ResultCode.USER_TYPE_STUDENT+"";
+				student.setPassword(Base64.encode(password.getBytes()));
+				studentService.updateStudent(student);
+				result.put("student", student);
+			}
+			//如果没有查询到对应用户
+			if(userid == null){
+				throw new MobileNotExistsException("mobile not found in DB");
+			}
+			result.put("userid",userid);
+			result.put("usertype",usertype);
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			LOG.error(e.toString(),e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			//账户不存在异常
+			if(e.getClass().equals(MobileNotExistsException.class)){
+				result.put("msg", ResultCode.RESULT_CODE_ERROR_MOBILE_NOT_EXIST_MSG);
+			}
+		}
+		return result;
+    }
+    
+    
+    
+    
+}

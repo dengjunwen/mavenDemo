@@ -1,0 +1,89 @@
+package com.cgq.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cgq.mapper.PageTaskMapper;
+import com.cgq.model.Page;
+import com.cgq.model.PageTask;
+import com.cgq.service.PageService;
+import com.cgq.service.PageTaskService;
+import com.cgq.service.TaskService;
+import com.cgq.util.CheckUtil;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+@Service
+public class PageTaskServiceImpl implements PageTaskService {
+
+	@Autowired
+	private PageTaskMapper pagetaskMapper;
+	@Autowired
+	private PageService pageService;
+	@Autowired
+	private TaskService taskService;
+	
+	@Override
+	public PageTask queryByPageId(Integer taskId, Integer index) {
+		Example e = new Example(PageTask.class);
+		Criteria criteria = e.createCriteria().andEqualTo("ttaskId",taskId).andEqualTo("pageIndex",index);
+		List<PageTask> pageTasks = 	pagetaskMapper.selectByExample(e);
+		return CheckUtil.notEmpty(pageTasks)?pageTasks.get(0):null;
+	}
+
+	@Override
+	public List<PageTask> queryAllPages() {
+		Example e = new Example(PageTask.class);
+		Criteria  criteria = e.createCriteria().andEqualTo("status",0);
+		e.setDistinct(true);
+		e.setOrderByClause("t_task_id desc,page_index asc");
+		List<PageTask> pageTasks = 	pagetaskMapper.selectByExample(e);
+		for(PageTask pt:pageTasks){
+			//将 Page相关的所有page拿过来
+			List<Page> pages = 	pageService.queryPageByPageid(pt.getTpageId());
+			pt.setPages(pages);
+			if(CheckUtil.notEmpty(taskService.queryTaskInfoForOnline(pt.getTtaskId()))){
+				pt.setTaskName(taskService.queryTaskInfoForOnline(pt.getTtaskId()).getTaskName());
+			}else{
+				pt.setTaskName("未设定");
+			}
+		}
+		return pageTasks;
+	}
+
+	@Override
+	public List<PageTask> queryAllStaticPages() {
+		List<PageTask> pageTasks = 	pagetaskMapper.getDistinctPageView();
+		for(PageTask pt:pageTasks){
+			//将 Page相关的所有page拿过来
+			List<Page> pages = 	pageService.queryPageByPageid(pt.getTpageId());
+			pt.setPages(pages);
+		}
+		return CheckUtil.notEmpty(pageTasks)?pageTasks:null;
+	}
+
+	@Override
+	public PageTask savePageTask(PageTask pageTask) throws Exception {
+				pagetaskMapper.insertSelective(pageTask);
+				return pageTask ;
+	}
+
+	@Override
+	public List<PageTask> getAllNoTaskPage() {
+			Example e = new Example(PageTask.class);
+			Criteria criteria = e.createCriteria().andIsNull("ttaskId");
+			return	pagetaskMapper.selectByExample(e);
+	}
+
+	@Override
+	public void updateTask(Integer[] pageIds, Integer[] pageIndex,Integer taskId) throws Exception {
+		for(int i=0;i<pageIds.length;i++){
+					PageTask pt = new PageTask(pageIds[i],pageIndex[i],taskId);
+					pagetaskMapper.updateByPrimaryKeySelective(pt);	
+		}
+	}
+	
+
+}

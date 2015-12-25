@@ -1,0 +1,58 @@
+package com.cgq.model;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+@Entity
+@Table(name="t_student_task_photo")
+public class StudentTaskPhoto {
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@Column(name = "id", unique = true, nullable = false)
+		private Integer id;
+		@Column(name="taskid")
+		private Integer taskId;
+		@Column(name="studentid")
+		private Integer studentId;
+		@Column(name="resourceid")
+		private Integer resourceId;
+		@Transient
+		private Resource resource;
+		
+		public Integer getId() {
+			return id;
+		}
+		public void setId(Integer id) {
+			this.id = id;
+		}
+		public Integer getTaskId() {
+			return taskId;
+		}
+		public void setTaskId(Integer taskId) {
+			this.taskId = taskId;
+		}
+		public Integer getStudentId() {
+			return studentId;
+		}
+		public void setStudentId(Integer studentId) {
+			this.studentId = studentId;
+		}
+		public Integer getResourceId() {
+			return resourceId;
+		}
+		public void setResourceId(Integer resourceId) {
+			this.resourceId = resourceId;
+		}
+		public Resource getResource() {
+			return resource;
+		}
+		public void setResource(Resource resource) {
+			this.resource = resource;
+		}
+		
+		
+}

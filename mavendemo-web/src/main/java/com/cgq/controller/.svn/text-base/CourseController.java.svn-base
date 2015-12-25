@@ -1,0 +1,85 @@
+package com.cgq.controller;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.cgq.service.CourseService;
+
+/**
+ * 课程业务类
+ * @author wangjie
+ *
+ */
+@Controller
+public class CourseController {
+	Logger LOG = LoggerFactory.getLogger(CourseController.class);
+	
+	@Autowired
+	private CourseService courseService;
+	
+	@ResponseBody
+	@RequestMapping("/manage/course/listcourse")
+	public String listcourse(@RequestParam(value= "classid", required = false) String classid){
+		try {
+			return courseService.listCourseCalendarJSONByClassid(classid);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString());
+			return "fail";
+		}
+	}
+	
+	/**
+	 * 删除课程安排
+	 * @param classid
+	 * @param courseid
+	 * @return
+	 */
+	@RequestMapping("/manage/course/delcourse")
+	public String delcourse(@RequestParam(value= "classid", required = false) String classid,@RequestParam(value= "courseid", required = false) String courseid){
+		try {
+			courseService.delcourse(classid,courseid);
+			return "redirect:/manage/classes/configCourse?classid="+classid;
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString());
+			return  "redirect:/manage/classes/configCourse?classid="+classid;
+		}
+	}
+	
+	@ResponseBody
+	@RequestMapping("/manage/course/addcourse")
+	public String addCourse(
+			@RequestParam(value= "classid", required = false) String classid,
+			@RequestParam(value= "date", required = false) String date,
+			@RequestParam(value= "taskid", required = false) String taskid,
+			@RequestParam(value= "teacherid", required = false) String teacherid,
+			@RequestParam(value= "coursename", required = false) String coursename,
+			@RequestParam(value= "endhour", required = false) String endhour,
+			@RequestParam(value= "starthour", required = false) String starthour,
+			@RequestParam(value= "endmin", required = false) String endmin,
+			@RequestParam(value= "startmin", required = false) String startmin,
+			HttpServletRequest request
+			){
+		try {
+			//在本地调试需要打开此注解防止中文乱码
+			//coursename = new String(request.getParameter("coursename").getBytes("ISO-8859-1"),"utf-8") ;
+			String endtime = endhour + ":" + endmin;
+			String starttime = starthour + ":" + startmin;
+			courseService.addCourse(classid,date,taskid,teacherid,coursename,endtime,starttime);
+			return "success";
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString());
+			return "fail";
+		}
+	}
+	
+}

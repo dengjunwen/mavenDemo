@@ -1,0 +1,59 @@
+package com.cgq.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cgq.mapper.RewardMapper;
+import com.cgq.model.Reward;
+import com.cgq.service.RewardService;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.DateProcess;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+@Service
+@Transactional
+public class RewardServiceImpl implements RewardService 	 {
+
+	@Autowired
+	private RewardMapper rewardmapper;
+	
+	
+	@Override
+	public void addReward(Reward reward) throws Exception {
+		Example e = new Example(Reward.class);
+		Criteria criteria = e.createCriteria().andEqualTo("userId", reward.getUserId()).andEqualTo("taskId",reward.getTaskId()).andEqualTo("pageIndex", reward.getPageIndex());
+		List<Reward> list  = rewardmapper.selectByExample(e);
+		
+		if(CheckUtil.notEmpty(list)&&list.size()!=0){
+				Reward reward_exit = list.get(0);
+				reward_exit.setNum(reward.getNum());
+				reward_exit.setPageIndex(reward.getPageIndex());
+				reward_exit.setResourceId(reward.getResourceId());
+				reward_exit.setRewardtime(DateProcess.getSysTime());
+//				rewardmapper.updateByExample(reward_exit, e);
+				rewardmapper.updateByPrimaryKeySelective(reward_exit);
+		}else{
+			reward.setRewardtime(DateProcess.getSysTime());
+			rewardmapper.insertSelective(reward);
+		}
+		
+	}
+
+	@Override
+	public void deleteReward(Integer id) throws Exception {
+		rewardmapper.deleteByPrimaryKey(id);
+	}
+
+	@Override
+	public List<Reward> queryRewardByUserIdAndTaskId(Integer userId, Integer taskId) {
+		Example e = new Example(Reward.class);
+		Criteria criteria = e.createCriteria().andEqualTo("userId",userId).andEqualTo("taskId",taskId).andEqualTo("type", 1);
+			 
+		return rewardmapper.selectByExample(e); 
+	}
+
+}

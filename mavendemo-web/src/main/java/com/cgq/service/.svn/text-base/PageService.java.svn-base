@@ -1,0 +1,47 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.Page;
+import com.cgq.model.Resource;
+
+public interface PageService  {
+	
+	public void SavePage(Page page)throws Exception;
+	
+	public void updatePage()throws Exception;
+	
+	public void queryPageById();
+	
+	
+	/**
+	 * 获取一个任务下的一个页面 ，一个页面有关联多个页面元素，资源
+	 * @param pageid
+	 * @return
+	 */
+	public List<Page> queryPageByPageid(String pageid);
+	
+	
+	
+	/**
+	 * 获取可编辑的page页面
+	 * @return
+	 */
+	//public List<Page> queryStaticPage(String pageId);
+	
+
+	/**通过pageId 获取页面配置的资源
+	 * @param pageId
+	 * @param resoureType
+	 * @return
+	 */
+	public List<Resource> queryResourceByPageId(String pageId,Integer resourceType);
+
+	public List<Page> queryPageByPageIdAndType(String pageId,Integer resourceType);
+	
+	
+	public List<Page> queryPageByPageIdAndResourceId(Integer pageId,Integer resourceId);
+
+	List<Page> queryStaticPage();
+	
+}

@@ -1,0 +1,17 @@
+package com.cgq.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import com.cgq.model.Resource;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface ResourceMapper extends Mapper<Resource>{
+	
+	public Resource selectById(Integer id);
+	
+	public List<Resource> queryList();
+
+	public List<Resource> queryResource(Map<String, Object> map);
+}

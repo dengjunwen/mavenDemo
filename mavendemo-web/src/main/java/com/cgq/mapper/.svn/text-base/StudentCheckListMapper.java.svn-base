@@ -1,0 +1,18 @@
+package com.cgq.mapper;
+
+import java.util.List;
+
+import com.cgq.model.StudentCheckList;
+import com.cgq.model.StudentClass;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface StudentCheckListMapper extends Mapper<StudentCheckList>{
+
+	/**
+	 * 根据学生ID分页查询checklist
+	 * @param studentCheckList
+	 */
+	List<StudentCheckList> listByStudentidPager(StudentCheckList studentCheckList);
+
+}

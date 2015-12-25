@@ -1,0 +1,52 @@
+10
+
+dir
+146
+svn://123.57.157.165/svn/server/service/chenggongqiao/src/com/cgq
+svn://123.57.157.165
+
+
+
+2015-11-24T11:39:47.207737Z
+146
+zhangbin
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+a20c6a90-d46c-4436-b7fc-75a5128ab725
+
+controller
+dir
+
+exception
+dir
+
+filter
+dir
+
+mapper
+dir
+
+model
+dir
+
+service
+dir
+
+test
+dir
+
+util
+dir
+

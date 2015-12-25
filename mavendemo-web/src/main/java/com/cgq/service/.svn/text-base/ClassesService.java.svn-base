@@ -1,0 +1,30 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.Classes;
+import com.cgq.model.Student;
+
+public interface ClassesService {
+
+	public List<Classes> listAll();
+
+	public int delById(int id);
+
+	public int add(String className, String classLevel, String companyTeacherId);
+
+	/**
+	 * 查询一个班级下的学生列表
+	 * @param classid
+	 * @return
+	 */
+	public List<Student> listStudentsInClass(String classid);
+
+	public int rmStudentFromClass(int classid, int studentid);
+
+	public Classes querytById(String classid);
+
+	public int addStudentToClass(String studentids,String classesid);
+	
+	public Classes querytByTeacherId(Integer teach);
+}

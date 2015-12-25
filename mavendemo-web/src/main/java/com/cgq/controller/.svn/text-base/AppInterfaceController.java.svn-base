@@ -1,0 +1,1596 @@
+package com.cgq.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.alibaba.fastjson.JSON;
+import com.cgq.exception.MobileNotExistsException;
+import com.cgq.exception.NoAvailableMeetingroomException;
+import com.cgq.exception.PassWordErrorException;
+import com.cgq.model.Course;
+import com.cgq.model.Group;
+import com.cgq.model.LiveCourse;
+import com.cgq.model.Meetingroom;
+import com.cgq.model.Page;
+import com.cgq.model.PageTask;
+import com.cgq.model.Resource;
+import com.cgq.model.Reward;
+import com.cgq.model.Student;
+import com.cgq.model.StudentLive;
+import com.cgq.model.StudentTaskHistory;
+import com.cgq.model.StudentTaskPageHistory;
+import com.cgq.model.Task;
+import com.cgq.model.Teacher;
+import com.cgq.model.TreeNode;
+import com.cgq.model.UserFeedback;
+import com.cgq.service.CourseService;
+import com.cgq.service.MeetingroomService;
+import com.cgq.service.PageService;
+import com.cgq.service.PageTaskService;
+import com.cgq.service.ResourceService;
+import com.cgq.service.RewardService;
+import com.cgq.service.StudentService;
+import com.cgq.service.StudentTaskHistoryService;
+import com.cgq.service.StudentTaskPageHistoryService;
+import com.cgq.service.TaskService;
+import com.cgq.service.TeacherService;
+import com.cgq.service.UserFeedbackService;
+import com.cgq.service.XzqhService;
+import com.cgq.util.Base64;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.DateProcess;
+import com.cgq.util.RandomUtil;
+import com.cgq.util.RedisCache;
+import com.cgq.util.ResultCode;
+import com.cgq.util.ShortMessageUtil;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+/**
+ * 客户端接口类
+ * 
+ * @author wangjie
+ *
+ */
+@Controller
+public class AppInterfaceController {
+	@Autowired
+	private StudentService studentService;
+	@Autowired
+	private CourseService courseService;
+	@Autowired
+	private TaskService taskService;
+	@Autowired
+	private StudentTaskPageHistoryService studentTaskPageHistoryService;
+	@Autowired
+	private ResourceService resourceService;
+	@Autowired
+	private PageTaskService pageTaskService;
+	@Autowired
+	private TeacherService teacherService;
+	@Autowired
+	private PageService pageService;
+	/**
+	 * 记录获奖情况业务类
+	 */
+	@Autowired
+	private RewardService rewardService;
+	@Autowired
+	private XzqhService xzqhService;
+	@Autowired
+	private UserFeedbackService userFeedbackService;
+	@Autowired
+	private MeetingroomService meetingroomService;
+	/**
+	 * 记录学生任务进度业务类
+	 */
+	@Autowired
+	private StudentTaskHistoryService studentTaskHistoryService;
+
+	private static ResourceBundle bundle = ResourceBundle.getBundle("sysconf");
+	private String appServerLocation = bundle.getString("ApplicationServerLocation");
+
+	Logger LOG = LoggerFactory.getLogger(AppInterfaceController.class);
+
+	/**
+	 * 注册接口
+	 * 
+	 * @param mobile
+	 * @param passwd
+	 * @param varifyCode
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/register")
+	public Map<String, Object> register(@RequestParam("mobile") String mobile, @RequestParam("passwd") String passwd,
+			@RequestParam("varifyCode") String varifyCode) {
+		Map result = new HashMap();
+		try {
+			// 校验验证码
+			if (!checkVarifyCode(mobile, varifyCode)) {
+				result.put("code", ResultCode.RESULT_CODE_ERROR);
+				result.put("msg", ResultCode.RESULT_VERIFYCODE_ERROR_MSG);
+				return result;
+			}
+			// 检验手机号是否已被注册
+			Student student_check = studentService.queryStudentByMolie(mobile);
+			if (student_check != null) {
+				result.put("code", ResultCode.RESULT_CODE_ERROR);
+				result.put("msg", ResultCode.RESULT_CODE_ERROR_MOBILE_EXIST_MSG);
+				return result;
+			}
+			Teacher teacher_check = teacherService.queryTeacherByMobile(mobile);
+			if (teacher_check != null) {
+				result.put("code", ResultCode.RESULT_CODE_ERROR);
+				result.put("msg", ResultCode.RESULT_CODE_ERROR_MOBILE_EXIST_MSG);
+				return result;
+			}
+			// 默认把注册的用户作为学生
+			Student student = new Student();
+			student.setTelephone(mobile);
+			student.setPassword(Base64.encode(passwd.getBytes()));
+			studentService.addStudent(student);
+			result.put("userid", student.getId());
+			result.put("usertype", ResultCode.USER_TYPE_STUDENT);
+			result.put("userinfoupdateurl", appServerLocation + "userinfoupdate/userid/" + student.getId()
+					+ "/usertype/" + ResultCode.USER_TYPE_STUDENT);
+			result.put("mobile", mobile);
+			result.put("passwd", passwd);
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return result;
+	}
+
+	/**
+	 * 校验手机号和验证码是否匹配
+	 * 
+	 * @param mobile
+	 * @param varifycode
+	 * @return
+	 */
+	private Boolean checkVarifyCode(String mobile, String varifycode) {
+		String varifycode_cache = RedisCache.getValue(mobile);
+		if (varifycode != null && varifycode_cache != null) {
+			return varifycode.equals(varifycode_cache);
+		}
+		return false;
+	}
+
+	/**
+	 * 密码重置接口
+	 * 
+	 * @param mobile
+	 * @param passwd
+	 * @param varifyCode
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/resetpass")
+	public Map<String, Object> resetpass(@RequestParam("mobile") String mobile, @RequestParam("passwd") String passwd) {
+		LOG.info("mobile:" + mobile);
+		LOG.info("passwd:" + passwd);
+		Map result = new HashMap();
+		try {
+			String userid = null;
+			String usertype = null;
+			// 根据手机号在学生表里查询
+			Student student = studentService.queryStudentByMolie(mobile);
+			if (student == null) {
+				// 在老师表中查询
+				Teacher teacher = teacherService.queryTeacherByMobile(mobile);
+				if (teacher != null) {
+					userid = teacher.getId() + "";
+					usertype = ResultCode.USER_TYPE_TEACHER + "";
+					teacher.setPassword(Base64.encode(passwd.getBytes()));
+					teacherService.updateTeacher(teacher);
+				}
+			} else {
+				userid = student.getId() + "";
+				usertype = ResultCode.USER_TYPE_STUDENT + "";
+				student.setPassword(Base64.encode(passwd.getBytes()));
+				studentService.updateStudent(student);
+			}
+			// 如果没有查询到对应用户
+			if (userid == null) {
+				throw new MobileNotExistsException("mobile not found in DB");
+			}
+			result.put("userid", userid);
+			result.put("usertype", usertype);
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			// 账户不存在异常
+			if (e.getClass().equals(MobileNotExistsException.class)) {
+				result.put("msg", ResultCode.RESULT_CODE_ERROR_MOBILE_NOT_EXIST_MSG);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * 登陆接口
+	 * 
+	 * @param mobile
+	 * @param password
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/login")
+	public String login(@RequestParam("mobile") String mobile, @RequestParam("password") String password) {
+		Map result = new HashMap();
+		try {
+			String userid = null;
+			String usertype = null;
+			LOG.info("登陆手机号" + mobile);
+			LOG.info("登陆密码" + password);
+			// 根据手机号在学生表里查询
+			Student student = studentService.queryStudentByMolie(mobile);
+			if (student != null) {
+				userid = student.getId() + "";
+				usertype = ResultCode.USER_TYPE_STUDENT + "";
+				// 校验密码
+				if (!new String(Base64.decode(student.getPassword())).equals(password)) {
+					throw new PassWordErrorException("password error");
+				}
+			} else {
+				// 根据手机号在教师表里查询
+				Teacher teacher = teacherService.queryTeacherByMobile(mobile);
+				if (teacher != null) {
+					userid = teacher.getId() + "";
+					usertype = ResultCode.USER_TYPE_TEACHER + "";
+					// 校验密码
+					if (!new String(Base64.decode(teacher.getPassword())).equals(password)) {
+						throw new PassWordErrorException("password error");
+					}
+				}
+			}
+			// 没找到对应的用户
+			if (userid == null) {
+				throw new MobileNotExistsException("mobile not found in DB");
+			}
+			// 通过userid和usertype拼接各个请求URL
+			ResourceBundle bundle = ResourceBundle.getBundle("sysconf");
+			String appServerLocation = bundle.getString("ApplicationServerLocation");
+			result.put("userid", userid);
+			result.put("usertype", usertype);
+			result.put("nexturl", appServerLocation + "currenttaskinfo/userid/" + userid + "/usertype/" + usertype);
+			result.put("reviewurl", appServerLocation + "taskquery/userid/" + userid);
+			result.put("feebackurl", appServerLocation + "userfeeback/userid/" + userid + "/usertype/" + usertype);
+			result.put("rewardurl", appServerLocation + "rewardinfo/userid/" + userid);
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			// 密码错误异常
+			if (e.getClass().equals(PassWordErrorException.class)) {
+				result.put("msg", ResultCode.RESULT_CODE_ERROR_PASSWORD_MSG);
+			}
+			// 账户不存在异常
+			if (e.getClass().equals(MobileNotExistsException.class)) {
+				result.put("msg", ResultCode.RESULT_CODE_ERROR_MOBILE_NOT_EXIST_MSG);
+			}
+		}
+		return JSON.toJSONString(result);
+	}
+
+	/**
+	 * 获取验证码接口
+	 * 
+	 * @param mobile
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/getverifycode")
+	public Map<String, Object> getVerifyCode(@RequestParam("mobile") String mobile) {
+		Map<String, Object> result = Maps.newHashMap();
+		LOG.info("mobile:" + mobile);
+
+		if (!CheckUtil.isMobile(mobile)) {
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			return result;
+		}
+		String verifyCode = RedisCache.getValue(mobile);
+		// 如果redis中mobile对应的验证码不为空，表明没有失效，则返回 之前的验证码
+		if (CheckUtil.notEmpty(verifyCode)) {
+			ShortMessageUtil.sendRegisterMessage(mobile, verifyCode);
+		} else {
+			verifyCode = RandomUtil.getRandomNum();
+			ShortMessageUtil.sendRegisterMessage(mobile, verifyCode);
+			RedisCache.setex(mobile, verifyCode, 1800);
+		}
+		result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		result.put("verifyCode", verifyCode);
+		return result;
+
+	}
+
+	/**
+	 * 用户当前任务查询接口
+	 * 
+	 * @param userid
+	 * @param usertype
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/currenttaskinfo/userid/{userid}/usertype/{usertype}")
+	public String currenttaskinfo(@PathVariable("userid") Integer userid, @PathVariable("usertype") Integer usertype) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		try {
+			Course course = courseService.getUserCurrentTask(userid, usertype);
+			Task task = taskService.queryTaskInfo(course.getTaskId());
+			Integer teacherid = course.getTeacherId();
+			Teacher teacher = teacherService.queryTeacherInfo(teacherid);
+			String appServerLocation = "";
+			ResourceBundle bundle = ResourceBundle.getBundle("sysconf");
+			appServerLocation = bundle.getString("ApplicationServerLocation");
+			result.put("type", task.getTaskType());
+			result.put("taskid", task.getId());
+			result.put("taskname", task.getTaskName());
+			// 直播任务
+			if (task.getTaskType().equals(ResultCode.TASK_TYPE_LIVE.toString()))
+				result.put("url", appServerLocation + "meetingroom/start/userid/" + userid + "/usertype/" + usertype);
+			// online任务
+			if (task.getTaskType().equals(ResultCode.TASK_TYPE_ONLINE.toString())) {
+				// 查询用户的当前任务完成的记录
+				StudentTaskHistory studentTaskHistory = studentTaskHistoryService.queryStudentUndoneTaskHistory(userid,
+						task.getId());
+				int pageindex = 1;
+				if (CheckUtil.notEmpty(studentTaskHistory)) {
+					if (ResultCode.STATUS_FINISHED == studentTaskHistory.getStatus()) {
+						result.put("url", "");
+					}
+					if (ResultCode.STATUS_NOT_FINISHED == studentTaskHistory.getStatus()) {
+						pageindex = studentTaskHistory.getPageIndex();
+						if("0".equals(RedisCache.getValue(task.getId()+"_"+userid))){
+							result.put("url", appServerLocation + "online/taskid/" + task.getId() + "/index/" + pageindex
+									+ "/userid/" + userid);
+						}
+						if("1".equals(RedisCache.getValue(task.getId()+"_"+userid))){
+							result.put("url", appServerLocation + "online/taskid/" + task.getId() + "/index/" + (pageindex+1)
+									+ "/userid/" + userid);
+						}
+						
+					}
+				} else {
+					result.put("url", appServerLocation + "online/taskid/" + task.getId() + "/index/" + pageindex
+							+ "/userid/" + userid);
+				}
+				/*
+				 * //暂时注释掉 方便客户端调试 正式上线释放注解 if(studentTaskHistory!=null)
+				 * pageindex = studentTaskHistory.getPageIndex();
+				 * result.put("url",appServerLocation+"online/taskid/"+task.
+				 * getId()+"/index/"+pageindex+"/userid/"+userid);
+				 */
+			}
+			result.put("coursename", course.getCourseName());
+			result.put("courseid", course.getCourseId());
+			result.put("begintime", course.getBeginTime());
+			result.put("endtime", course.getEndTime());
+			result.put("teacher", teacher);
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		// 将teacher对象里的id字段名改成teacherid
+		String result_str = JSON.toJSONString(result).replace("\"id\"", "\"teacherid\"");
+		return result_str;
+	}
+
+	/**
+	 * online / offline分页加载接口
+	 * 
+	 * @param taskid
+	 *            任务id
+	 * @param index
+	 *            当前进行到了第几步
+	 * @param userid
+	 *            用户id
+	 * @param answer
+	 *            对应的答案
+	 * @param evaluate
+	 *            评价几颗星
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/online/taskid/{taskid}/index/{index}/userid/{userid}")
+	@ResponseBody
+	public Map<String, Object> onlinetask(@PathVariable("taskid") Integer taskid, @PathVariable("index") Integer index,
+			@PathVariable("userid") Integer userid, Integer answer, Integer evaluate, String content, Integer usetime,
+			HttpServletRequest request) {
+		Map<String, Object> data = Maps.newHashMap();
+		StudentTaskHistory history = new StudentTaskHistory();
+		if (CheckUtil.isEmpty(taskid) || CheckUtil.isEmpty(index) || CheckUtil.isEmpty(userid)) {
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_PARAMETER_ERROR_MSG);
+			return data;
+		}
+	try {
+		/**
+		 * 加入redis缓存   taskId_userid   == 0 表示  进入页面
+		 */
+		RedisCache.set(taskid+"_"+userid, "0");
+		Task task = taskService.queryTaskInfoForOnline(taskid);
+		PageTask pageTask = pageTaskService.queryByPageId(taskid, index);
+		
+		/**
+		 * 记录上传资源记录
+		 */
+		StudentTaskPageHistory studentTaskPageHistory = new StudentTaskPageHistory();
+		if(index == 1) studentTaskPageHistory.setPageIndex(index);
+		if(index != 1) studentTaskPageHistory.setPageIndex(index-1);
+		studentTaskPageHistory.setStudentId(userid);
+		studentTaskPageHistory.setTaskId(taskid);
+		if (CheckUtil.notEmpty(answer)) {
+			// answer 为 选的第几个
+			List<Resource> resources = pageService.queryResourceByPageId(pageTask.getTpageId(),
+					ResultCode.RESOURCE_TYPE_IMG);
+			List<Page> pages = pageService.queryPageByPageIdAndType(pageTask.getTpageId(),
+					ResultCode.RESOURCE_TYPE_IMG);
+			// 选择题
+			studentTaskPageHistory.setResouceId(resources.get(answer - 1).getId());
+			studentTaskPageHistory.setTaskType(ResultCode.TASK_TYPE_ANSWER_QUESTION);
+			studentTaskPageHistory.setAnswer(answer.toString());
+
+			studentTaskPageHistoryService.insert(studentTaskPageHistory);
+		}
+		if (CheckUtil.notEmpty(content)) {
+			// 文字题
+			studentTaskPageHistory.setTaskType(ResultCode.TASK_TYPE_ANSWER_CONTENT);
+			studentTaskPageHistory.setAnswer(content);
+
+			studentTaskPageHistoryService.insert(studentTaskPageHistory);
+		}
+		if (CheckUtil.notEmpty(evaluate)) {
+			// 心的个数
+			studentTaskPageHistory.setTaskType(ResultCode.TASK_TYPE_ANSWER_HEART);
+			studentTaskPageHistory.setAnswer(evaluate.toString());
+
+			studentTaskPageHistoryService.insert(studentTaskPageHistory);
+		}
+		if (CheckUtil.notEmpty(usetime)) {
+			if (CheckUtil.notEmpty(pageTask.getUsertime())) {
+				if (usetime > 0) {
+					studentTaskPageHistory.setUserTime(usetime);
+				} else {
+					studentTaskPageHistory.setUserTime(pageTask.getUsertime() - usetime);
+				}
+			}
+
+			studentTaskPageHistoryService.insert(studentTaskPageHistory);
+		}
+		
+		
+		/**
+		 * 删除当前index所有的任务记录
+		 */
+		studentTaskHistoryService.delStudentTaskHistory(userid, taskid, index);
+		
+		/**
+		 * 判断用户是否可以跳入下一页
+		 * 
+		 */
+		if (index != 1) {
+			boolean flag = studentTaskHistoryService.jumpIntoNextPage(taskid, index - 1, userid);
+			if (!flag) {
+				data.put("code", ResultCode.RESULT_CODE_ERROR);
+				data.put("msg", ResultCode.RESULT_TASK_INCOMPELETE_MSG);
+				data.put("nexturl", ResourceBundle.getBundle("sysconf").getString("ApplicationServerLocation")
+						+ "online/taskid/" + taskid + "/index/" + (index - 1) + "/userid/" + userid);
+				return data;
+			}
+		}
+		
+		
+		
+		
+
+		/**
+		 * read 操作 获取业务资源 service 获取资源
+		 */
+		
+			
+			List<Page> pages = taskService.queryTaskPageForOnline(taskid, userid, index);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+			data.put("templateid", pageTask.getTemplateId());
+			data.put("title", pageTask.getPageName());
+			data.put("content", pageTask.getDescription());
+			if (CheckUtil.notEmpty(pageTask.getUsertime()))
+				data.put("usetime", pageTask.getUsertime());
+			if (pageTask.getStatus() == 1)
+				data.put("nextUrl", ResourceBundle.getBundle("sysconf").getString("ApplicationServerLocation")
+						+ "onlinerewardpage/taskid/" + taskid + "/index/" + index + "/userid/" + userid);
+			if (pageTask.getStatus() == 0 && task.getCountStep() > index) {
+
+				data.put("nextUrl", ResourceBundle.getBundle("sysconf").getString("ApplicationServerLocation")
+						+ "online/taskid/" + taskid + "/index/" + (index + 1) + "/userid/" + userid);
+			}
+			if (task.getCountStep() == index) {
+				
+				if(pageTask.getStatus() == 1){
+					history.setStatus(0);
+				}else{
+					// TODO 把任务状态设置为，已完成
+					history.setStatus(1);
+				}
+				
+			}
+
+			List uploadurls = Lists.newArrayList();
+			List imgurls = Lists.newArrayList();
+			List audiourls = Lists.newArrayList();
+			List videourls = Lists.newArrayList();
+			int uploadIndex = 0;
+			for (Page page : pages) {
+				Resource resource = page.getResource();
+
+				if (CheckUtil.notEmpty(resource)) {
+
+					/**
+					 * 资源类型 0：音频 1：视频 2：图片
+					 */
+					if (resource.getType() == 0)
+						audiourls.add(ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+								+ resource.getUrl());
+					if (resource.getType() == 1)
+						videourls.add(ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+								+ resource.getUrl());
+					if (resource.getType() == 2)
+						imgurls.add(ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+								+ resource.getUrl());
+					if (page.getIsAnswer() == 1)
+						data.put("answer", imgurls.size());
+				} else {
+					uploadIndex++;
+					if (CheckUtil.notEmpty(page.getUploadUrl()))
+						uploadurls.add(ResourceBundle.getBundle("sysconf").getString("ApplicationServerLocation")
+								+ "onlineupload/taskid/" + taskid + "/index/" + index + "/studentId/" + userid
+								+ "/sortIndex/" + uploadIndex);
+				}
+
+			}
+			data.put("uploadurls", uploadurls);
+			data.put("imgurls", imgurls);
+			data.put("audiourls", audiourls);
+			data.put("videourls", videourls);
+			/*
+			 * List<Map<String, Object>> pageMaps = Lists.newArrayList(); for
+			 * (Page page : pages) { Map<String, Object> pagemap =
+			 * Maps.newHashMap(); pagemap.put("id", page.getId());
+			 * pagemap.put("pageid", page.getPageid()); pagemap.put("pagename",
+			 * page.getPagename()); pagemap.put("description",
+			 * page.getDescription()); pagemap.put("x", page.getX());
+			 * pagemap.put("y", page.getY()); pagemap.put("xx", page.getXx());
+			 * pagemap.put("yy", page.getYy()); pagemap.put("isAnswer",
+			 * page.getIsAnswer()); pagemap.put("uploadUrl",
+			 * page.getUploadUrl()); pagemap.put("resourceid",
+			 * CheckUtil.notEmpty(page.getResource()) ?
+			 * page.getResource().getId() : ""); pagemap.put("url",
+			 * CheckUtil.notEmpty(page.getResource()) ?
+			 * page.getResource().getUrl() : ""); pagemap.put("type",
+			 * CheckUtil.notEmpty(page.getResource()) ?
+			 * page.getResource().getType() : ""); pageMaps.add(pagemap); }
+			 */
+			// data.put("mainaudiourl", "");
+
+			// 添加记录用户操作流水日志
+
+			history.setPageIndex(index);
+			history.setTTaskId(taskid);
+			history.setStudentId(userid);
+			history.setTaskType(ResultCode.TASK_TYPE_ONLINE);
+			history.setUpdatetime(DateProcess.getSysTime());
+			studentTaskHistoryService.addTaskHistory(history);
+
+		} catch (Exception e) {
+			LOG.error(e.toString(), e.fillInStackTrace());
+			e.printStackTrace();
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+
+		/**
+		 * write 操作，把有操作的 service 资源与服务器交互
+		 */
+		return data;
+	}
+
+	/**
+	 * 在线任务奖励页加载接口
+	 * 
+	 * @param taskid
+	 * @param index
+	 * @param userid
+	 * @return
+	 */
+	/**
+	 * @param taskid
+	 * @param index
+	 * @param userid
+	 * @param answer
+	 * @param content
+	 * @return
+	 */
+	@RequestMapping("/onlinerewardpage/taskid/{taskid}/index/{index}/userid/{userid}")
+	@ResponseBody
+	public Map<String, Object> onlinerewardpage(@PathVariable("taskid") Integer taskid,
+			@PathVariable("index") Integer index, @PathVariable("userid") Integer userid, Integer answer,
+			String content, Integer usetime, Integer evaluate) {
+		Map<String, Object> result = Maps.newHashMap();
+
+		System.out.println("index ======" + index);
+		System.out.println("answer ======" + answer);
+		System.out.println("content ======" + content);
+		System.out.println("usetime ======" + usetime);
+		System.out.println("evaluate ======" + evaluate);
+		/**
+		 * 判断用户是否可以跳入下一页
+		 * 
+		 */
+
+		try {
+			StudentTaskHistory history = new StudentTaskHistory();
+		
+			/**
+			 * 个人信息相关的假数据
+			 */
+			result.put("level", 36);
+			result.put("energy", 30);
+			result.put("levelname", "初出茅庐");
+			result.put("picturl", "http://101.200.203.125:8088/static/userupload/pic/1.jpg");
+
+			Task task = taskService.queryTaskInfoForOnline(taskid);
+			PageTask pageTask = pageTaskService.queryByPageId(taskid, index);
+			Resource successImage = resourceService.getResourceById(pageTask.getSuccessResourceImg());
+			String success_reward = ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+					+ successImage.getUrl();
+			// Resource errorImage =
+			// resourceService.getResourceById(pageTask.getErrorResourceImg());
+			// String error_reward =
+			// ResourceBundle.getBundle("sysconf").getString("FileServerLocation")+errorImage.getUrl();
+			result.put("rewardimgurl", success_reward);
+			/**
+			 * 记录用户获奖信息
+			 */
+			Reward reward = new Reward();
+			reward.setNum(1);
+			reward.setPageIndex(index);
+			reward.setResourceId(pageTask.getSuccessResourceImg());
+			reward.setTaskId(taskid);
+			reward.setUserId(userid);
+			rewardService.addReward(reward);
+			/**
+			 * 记录上传资源记录
+			 */
+			StudentTaskPageHistory studentTaskPageHistory = new StudentTaskPageHistory();
+			studentTaskPageHistory.setPageIndex(index);
+			studentTaskPageHistory.setStudentId(userid);
+			studentTaskPageHistory.setTaskId(taskid);
+			if (CheckUtil.notEmpty(answer)) {
+				// answer 为 选的第几个
+				List<Resource> resources = pageService.queryResourceByPageId(pageTask.getTpageId(),
+						ResultCode.RESOURCE_TYPE_IMG);
+				List<Page> pages = pageService.queryPageByPageIdAndType(pageTask.getTpageId(),
+						ResultCode.RESOURCE_TYPE_IMG);
+				// 选择题
+				studentTaskPageHistory.setResouceId(resources.get(answer - 1).getId());
+				studentTaskPageHistory.setTaskType(ResultCode.TASK_TYPE_ANSWER_QUESTION);
+				studentTaskPageHistory.setAnswer(answer.toString());
+				// TODO
+				if (pages.get(answer - 1).getIsAnswer() == 1) {
+					result.put("rewardimgurl", success_reward);
+				} else {
+					result.put("rewardimgurl", success_reward);
+				}
+			}
+			if (CheckUtil.notEmpty(content)) {
+				// 文字题
+				studentTaskPageHistory.setTaskType(ResultCode.TASK_TYPE_ANSWER_CONTENT);
+				studentTaskPageHistory.setAnswer(content);
+			}
+			if (CheckUtil.notEmpty(evaluate)) {
+				// 心的个数
+				studentTaskPageHistory.setTaskType(ResultCode.TASK_TYPE_ANSWER_HEART);
+				studentTaskPageHistory.setAnswer(evaluate.toString());
+			}
+			if (CheckUtil.notEmpty(usetime)) {
+				if (CheckUtil.notEmpty(pageTask.getUsertime())) {
+					if (usetime > 0) {
+						studentTaskPageHistory.setUserTime(usetime);
+						result.put("rewardimgurl", success_reward);
+					} else {
+						studentTaskPageHistory.setUserTime(pageTask.getUsertime() - usetime);
+						result.put("rewardimgurl", success_reward);
+					}
+				}
+			}
+
+			studentTaskPageHistoryService.insert(studentTaskPageHistory);
+			
+			
+			/**
+			 * 判断页面任务是否完成 是否可以跳入下个页面 
+			 */
+			boolean flag = studentTaskHistoryService.jumpIntoNextPage(taskid, index, userid);
+			if (!flag) {
+				result.clear();
+				result.put("code", ResultCode.RESULT_CODE_ERROR);
+				result.put("msg", ResultCode.RESULT_TASK_INCOMPELETE_MSG);
+				result.put("nexturl", ResourceBundle.getBundle("sysconf").getString("ApplicationServerLocation")
+						+ "online/taskid/" + taskid + "/index/" + index + "/userid/" + userid);
+				return result;
+			}
+			//针对最后一页 特殊处理任务状态
+			if (task.getCountStep() == index&&flag) {
+					history.setStatus(1);
+					history.setPageIndex(index);
+					history.setTTaskId(taskid);
+					history.setStudentId(userid);
+					history.setTaskType(ResultCode.TASK_TYPE_ONLINE);
+					history.setUpdatetime(DateProcess.getSysTime());
+					studentTaskHistoryService.addTaskHistory(history);
+			}
+			
+			
+			
+			/**
+			 * 加入redis缓存   taskId_userid   == 1表示  进入了成功展示页面
+			 */
+			RedisCache.set(taskid+"_"+userid, "1");
+			
+			/**
+			 * 获取用户历史任务资源
+			 */
+			List<StudentTaskPageHistory> studentTaskPageHistories = studentTaskPageHistoryService
+					.getResourceIdByStudentAndPageId(userid, index, taskid);
+			List audiourls = Lists.newArrayList();
+			List videourls = Lists.newArrayList();
+			List imgurls = Lists.newArrayList();
+
+			/**
+			 * 资源整合
+			 */
+			for (StudentTaskPageHistory stp : studentTaskPageHistories) {
+				/**
+				 * 返回答题的内容
+				 */
+				// if (stp.getTaskType() ==
+				// ResultCode.TASK_TYPE_ANSWER_QUESTION)
+				result.put("answer", stp.getAnswer());
+				/**
+				 * 返回上传资源的url
+				 */
+				if (stp.getTaskType() == ResultCode.TASK_TYPE_UPLOAD_RESOURCE) {
+					Integer resourceId = stp.getResouceId();
+					Resource resource = resourceService.getResourceById(resourceId);
+					if (resource.getType() == ResultCode.RESOURCE_TYPE_IMG)
+						imgurls.add(ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+								+ resource.getUrl());
+					if (resource.getType() == ResultCode.RESOURCE_TYPE_VIDEO)
+						videourls.add(ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+								+ resource.getUrl());
+					if (resource.getType() == ResultCode.RESOURCE_TYPE_VOICE)
+						audiourls.add(ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+								+ resource.getUrl());
+				}
+				/**
+				 * 返回选择题对应的选项答案 ，所选结果
+				 */
+				if (stp.getTaskType() == ResultCode.TASK_TYPE_ANSWER_QUESTION) {
+					Integer resourceId = stp.getResouceId();
+					Resource resource = resourceService.getResourceById(resourceId);
+					result.put("answerImageUrl", resource.getUrl());
+				} else {
+					result.put("answerImageUrl", "");
+				}
+			}
+			result.put("templateid", 12);
+
+			if (task.getCountStep() > index) {
+				result.put("nextUrl", ResourceBundle.getBundle("sysconf").getString("ApplicationServerLocation")
+						+ "/online/taskid/" + task.getId() + "/index/" + (index + 1) + "/userid/" + userid);
+			}
+
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+			result.put("imgurls", imgurls);
+			result.put("audiourls", audiourls);
+			result.put("videourls", videourls);
+			// result.put("rewardimgurl",ResourceBundle.getBundle("sysconf").getString("FileServerLocation")+
+			// pageTask.getSuccessResourceImg());
+			// result.put("rewardimgurl","http://101.200.203.125:8088/static/userupload/pic/success.png");
+			result.put("rewardscore", "1");
+		} catch (Exception e) {
+			e.printStackTrace();
+			// TODO: handle exception
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return result;
+	}
+
+	/**
+	 * Online页面组件内容统一上传接口
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/onlineupload/taskid/{taskid}/index/{index}/studentId/{studentId}/sortIndex/{sortIndex}")
+	@ResponseBody
+	public Map<String, Object> onlineTaskPageUpload(@PathVariable("taskid") Integer taskid,
+			@PathVariable("index") Integer index, @PathVariable("sortIndex") Integer sortIndex,
+			@PathVariable("studentId") Integer studentId, HttpServletRequest request) {
+		Map<String, Object> data = Maps.newHashMap();
+		try {
+			
+			List resourceUrls = Lists.newArrayList();
+			StudentTaskPageHistory studentTaskPageHistory = new StudentTaskPageHistory();
+			studentTaskPageHistory.setResouceId(0);
+			studentTaskPageHistory.setPageIndex(index);
+			studentTaskPageHistory.setSortIndex(sortIndex);
+			studentTaskPageHistory.setStudentId(studentId);
+			studentTaskPageHistory.setTaskId(taskid);
+			studentTaskPageHistory.setTaskType(ResultCode.TASK_TYPE_UPLOAD_RESOURCE);
+			studentTaskPageHistoryService.insert(studentTaskPageHistory);
+			
+			
+			byte[] filedatabytes = null;
+			String filetype = (String) request.getParameterValues("filetype")[0];
+			MultipartHttpServletRequest mresource = (MultipartHttpServletRequest) request;
+			Map<String, MultipartFile>  fileMap = mresource.getFileMap();
+			System.out.println("===============fileMapSize:"+fileMap.size());
+			for (Map.Entry<String, MultipartFile> entity : fileMap.entrySet()) {
+				MultipartFile mf = entity.getValue();
+				filedatabytes = mf.getBytes();
+			}
+			System.out.println("===============filedatabytesSize:"+filedatabytes.length);
+			System.out.println("===============filetype:"+filetype);
+			Resource resource = resourceService.uploadFileResouce(filedatabytes, ResultCode.SOURCE_USERUPLOAD, filetype);
+			studentTaskPageHistory.setResouceId(resource.getId());
+			resourceUrls.add(resource.getUrl());
+			studentTaskPageHistoryService.update(studentTaskPageHistory);
+			System.out.println("=================URL:"+resource.getUrl());
+			data.put("resourceurl", resourceUrls);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			e.printStackTrace();
+			LOG.error(e.toString(), e.fillInStackTrace());
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return data;
+	}
+
+	/**
+	 * 直播任务开始接口
+	 * 
+	 * @param userid
+	 * @param usertype
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/meetingroom/start/userid/{userid}/usertype/{usertype}")
+	public Map<String, Object> entremeetingroom(@PathVariable("userid") Integer userid,
+			@PathVariable("usertype") Integer usertype) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		// 查询用户当前的课程
+		Course course = courseService.getUserCurrentTask(userid, usertype);
+		if (course == null) {
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_NOCOURSE_ERROR_MSG);
+		}
+		String courseid = course.getCourseId();
+		LiveCourse livecourse = null;
+		try {
+			Task task = courseService.getTaskByCourseid(courseid + "");
+			livecourse = meetingroomService.getLiveCourse(courseid);
+			if (livecourse == null) {
+				livecourse = meetingroomService.getLiveInstanceCourse(courseid);
+			}
+			Meetingroom meetingroom = livecourse.getMeetingroom();
+			Set<StudentLive> studentset = new HashSet<StudentLive>();
+			studentset = livecourse.getStudentSet();
+			Set<Group> groupset = new HashSet<Group>();
+			groupset = livecourse.getGroupSet();
+
+			result.put("studentset", studentset);
+			result.put("meetingroomid", meetingroom.getId() + "");
+			result.put("meetingroomname", meetingroom.getRoomName());
+			result.put("meetingroomaccount", meetingroom.getAccount());
+			result.put("meetingroompasswd", meetingroom.getPasswd());
+			result.put("meetingroomisheadpic",meetingroom.getIsHeadPic());
+			result.put("groupset", groupset);
+			result.put("coursewareurl", livecourse.getCoursewareurl() + "&userid=" + userid + "&usertype=" + usertype);
+			result.put("courseid", courseid);
+			StudentTaskHistory history = new StudentTaskHistory();
+			history.setPageIndex(0);
+			history.setStatus(0);
+			history.setStudentId(userid);
+			history.setTaskName(task.getTaskName());
+			history.setTaskType(ResultCode.TASK_TYPE_LIVE);
+			history.setTTaskId(task.getId());
+			history.setUpdatetime(DateProcess.getSysTime());
+			// 记录或更新用户上课流水
+			studentTaskHistoryService.addLiveTaskHistory(history);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			if (e.getMessage() != null && e.getMessage().equals("no more available meetingrooms")) {
+				result.put("msg", ResultCode.RESULT_OUTOFMEETINGROOM_ERROR_MSG);
+			}
+			return result;
+		}
+		result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		return result;
+	}
+
+	/**
+	 * 心跳接口请求间隔时间
+	 */
+	private static final int WAITTIME = 2000;
+
+	/**
+	 * 心跳程序 告知客户端各个学生的状态(麦的开关，举手状态等等),各个小组的状态(积分,是否处于抢答)
+	 * 
+	 * @return
+	 * @param courseid
+	 *            对应course表的courseid字段
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/meetingroom/heartbeat/courseid/{courseid}")
+	public Map<String, Object> heartBeat(@PathVariable("courseid") String courseid) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		LiveCourse livecourse = null;
+		try {
+			livecourse = meetingroomService.getLiveCourse(courseid);
+			if (livecourse == null) {
+				result.put("code", ResultCode.RESULT_CODE_ERROR);
+				result.put("msg", ResultCode.RESULT_NOLIVECOURSE_ERROR_MSG);
+				return result;
+			}
+			Meetingroom meetingroom = livecourse.getMeetingroom();
+			Set<StudentLive> studentset = new HashSet<StudentLive>();
+			studentset = livecourse.getStudentSet();
+			Set<Group> groupset = new HashSet<Group>();
+			groupset = livecourse.getGroupSet();
+			result.put("groupset", groupset);
+			result.put("studentset", studentset);
+			result.put("meetingroomid", meetingroom.getId() + "");
+			result.put("meetingroomname", meetingroom.getRoomName());
+			result.put("meetingroomaccount", meetingroom.getAccount());
+			result.put("meetingroompasswd", meetingroom.getPasswd());
+			result.put("meetingroomisheadpic",meetingroom.getIsHeadPic());
+			result.put("waittime", WAITTIME);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			if (e.getClass().equals(NoAvailableMeetingroomException.class)) {
+				result.put("msg", ResultCode.RESULT_OUTOFMEETINGROOM_ERROR_MSG);
+			}
+			return result;
+		}
+		result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		return result;
+	}
+
+	/**
+	 * 直播室学生状态更改接口
+	 * 
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/meetingroom/studentstatuschange/courseid/{courseid}")
+	public Map<String, Object> studentStatusChange(@PathVariable("courseid") String courseid,
+			@RequestParam(value ="studentids") String studentids, @RequestParam(value = "seat", required = false) String seat,
+			@RequestParam(value = "groupid", required = false) String groupid,
+			@RequestParam(value = "handstatus", required = false) Integer handstatus,
+			@RequestParam(value = "micstatus", required = false) Integer micstatus,
+			@RequestParam(value = "isonline", required = false) Integer isonline,
+			@RequestParam(value = "energy", required = false) Integer energy) {
+		Map<String, Object> result = new HashMap();
+		try {
+			for(String studentid : studentids.split(",")){
+				if(CheckUtil.isEmpty(studentid))continue;
+				meetingroomService.studentStatusChange(courseid, Integer.valueOf(studentid), seat, groupid, handstatus, micstatus, isonline,
+						energy);
+			}
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return result;
+	}
+
+	/**
+	 * 小组状态更改接口
+	 * 
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/meetingroom/groupstatuschange/courseid/{courseid}/groupid/{groupid}")
+	public Map<String, Object> groupStatusChange(@PathVariable("courseid") String courseid,
+			@PathVariable("groupid") String groupid,
+			@RequestParam(value = "groupscore", required = false) String groupscore,
+			@RequestParam(value = "status", required = false) String status) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		try {
+			meetingroomService.groupStatusChange(courseid, groupid, groupscore, status);
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return result;
+	}
+	
+	/**
+	 * 小组状态更改接口
+	 * 
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/meetingroom/meetingroomstatuschange/courseid/{courseid}")
+	public Map<String, Object> meetingroomstatuschange(@PathVariable("courseid") String courseid,
+			@RequestParam(value = "isheadpic", required = false) Integer isHeadPic) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		try {
+			meetingroomService.meetingroomstatuschange(courseid, isHeadPic);
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return result;
+	}
+
+	/**
+	 * 直播任务分页加载接口
+	 * 
+	 * 给H5插件调用
+	 * 
+	 * @param model
+	 * @param taskid
+	 * @param index
+	 * @param userid
+	 * @param request
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/livetask/taskid/{taskid}/index/{index}/userid/{userid}")
+	public Object livetask(Model model, @PathVariable("taskid") Integer taskid, @PathVariable("index") Integer index,
+			@PathVariable("userid") Integer userid, HttpServletRequest request) {
+		LOG.info("taskid:" + taskid);
+		LOG.info("index:" + index);
+		LOG.info("userid:" + userid);
+		try {
+			Map result = new HashMap();
+			Task task = taskService.queryTaskInfo(taskid);
+			Resource resource = taskService.getLiveResource(task, index);
+			if (resource != null) {
+				result.put("total", task.getCountStep());
+				result.put("resourcetype", resource.getType());// 2:图片 1:视频 0:音频
+				ResourceBundle bundle = ResourceBundle.getBundle("sysconf");
+				result.put("url", bundle.getString("FileServerLocation") + resource.getUrl());
+			}
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+			return JSON.toJSONString(result);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			Map result = new HashMap();
+			result.put("status", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			return JSON.toJSONString(result);
+		}
+	}
+
+	/**
+	 * 直播任务结束接口
+	 * 
+	 * @param courseid
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/endlivetask/courseid/{courseid}")
+	public Map<String, Object> endlivetask(@PathVariable("courseid") String courseid) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		try {
+			meetingroomService.endlivecourse(courseid);
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			LOG.error(e.toString(), e.fillInStackTrace());
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return result;
+	}
+
+	/**
+	 * task查询接口
+	 * 
+	 * @param userid
+	 * @param missionid
+	 * @param taskid
+	 * @return
+	 */
+	@RequestMapping("/taskquery/userid/{userid}")
+	@ResponseBody
+	public Map<String, Object> taskquery(@PathVariable("userid") Integer userid,
+			@RequestParam(value = "taskid", required = false) Integer taskid) {
+		Map<String, Object> result = Maps.newHashMap();
+
+		result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+
+		List<Map<String, Object>> taskList = Lists.newArrayList();
+		List<StudentTaskHistory> histories = studentTaskHistoryService.queryStudentTaskHistoryByUserId(userid);
+		for (StudentTaskHistory history : histories) {
+			Map<String, Object> task = Maps.newHashMap();
+			task.put("taskName", history.getTaskName());
+			task.put("url", ResourceBundle.getBundle("sysconf").getString("ApplicationServerLocation")
+					+ "/taskdetail/taskid/" + history.getTTaskId() + "/userid/" + userid);
+			taskList.add(task);
+		}
+		/*Map<String, Object> task = Maps.newHashMap();
+		task.put("taskName", "测试的不要点");
+		task.put("url", "www.baidu.com");
+		taskList.add(task);*/
+
+		result.put("taskList", taskList);
+		return result;
+	}
+
+	/**
+	 * 用户task详情查询接口
+	 * 
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/taskdetail/taskid/{taskid}/userid/{userid}")
+	public Map<String, Object> taskdetailquery(@PathVariable("taskid") Integer taskid,
+			@PathVariable("userid") Integer userid) {
+
+		Map<String, Object> data = Maps.newHashMap();
+
+		Task task = taskService.queryTaskInfoForOnline(taskid);
+		data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		data.put("taskDescription", task.getDescription());
+		List pageList = Lists.newArrayList();
+		StudentTaskHistory history = studentTaskHistoryService.queryHistoryByUserIdAndTaskId(userid, taskid);
+		try {
+			for (int i = 0; i < history.getPageIndex(); i++) {
+				Map<String, Object> pageview = Maps.newHashMap();
+				List imgurls = Lists.newArrayList();
+				List audiourls = Lists.newArrayList();
+				List videourls = Lists.newArrayList();
+				/**
+				 * 1.获取页面静态资源
+				 */
+				Integer pageindex = i + 1;
+				PageTask pageTask = pageTaskService.queryByPageId(taskid, pageindex);
+				List<Page> pages = taskService.queryTaskPageForOnline(taskid, userid, pageindex);
+				/*
+				 * for(Page page : pages){ Resource resource =
+				 * page.getResource(); if(CheckUtil.notEmpty(resource)){
+				 *//**
+					 * 资源类型 0：音频 1：视频 2：图片
+					 *//*
+					 * if(resource.getType() == 0)
+					 * audiourls.add(ResourceBundle.getBundle("sysconf").
+					 * getString("FileServerLocation")+resource.getUrl());
+					 * if(resource.getType() == 1)
+					 * videourls.add(ResourceBundle.getBundle("sysconf").
+					 * getString("FileServerLocation")+resource.getUrl());
+					 * if(resource.getType() == 2)
+					 * imgurls.add(ResourceBundle.getBundle("sysconf").getString
+					 * ("FileServerLocation")+ resource.getUrl()); } }
+					 */
+				/**
+				 * 2 .获取用户做任务的资源
+				 */
+				List<StudentTaskPageHistory> studentTaskPageHistories = studentTaskPageHistoryService
+						.getResourceIdByStudentAndPageId(userid, pageindex, taskid);
+
+				/**
+				 * 资源整合
+				 */
+				for (StudentTaskPageHistory stp : studentTaskPageHistories) {
+					/**
+					 * 返回答题的内容
+					 */
+					if (stp.getTaskType() == ResultCode.TASK_TYPE_ANSWER_QUESTION)
+						pageview.put("answer", stp.getAnswer());
+					if (stp.getTaskType() == ResultCode.TASK_TYPE_ANSWER_HEART)
+						pageview.put("evaluate", stp.getAnswer());
+					/**
+					 * 返回上传资源的url
+					 */
+					if (stp.getTaskType() == ResultCode.TASK_TYPE_UPLOAD_RESOURCE) {
+						Integer resourceId = stp.getResouceId();
+						Resource resource = resourceService.getResourceById(resourceId);
+						if (resource.getType() == ResultCode.RESOURCE_TYPE_IMG)
+							imgurls.add(ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+									+ resource.getUrl());
+						if (resource.getType() == ResultCode.RESOURCE_TYPE_VIDEO)
+							videourls.add(ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+									+ resource.getUrl());
+						if (resource.getType() == ResultCode.RESOURCE_TYPE_VOICE)
+							audiourls.add(ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+									+ resource.getUrl());
+					}
+					/**
+					 * 返回选择题对应的选项答案 ，所选结果
+					 */
+					if (stp.getTaskType() == ResultCode.TASK_TYPE_ANSWER_QUESTION) {
+						Integer resourceId = stp.getResouceId();
+						Resource resource = resourceService.getResourceById(resourceId);
+						pageview.put("answerImageUrl",
+								ResourceBundle.getBundle("sysconf").getString("FileServerLocation")
+										+ resource.getUrl());
+					}
+
+				}
+				pageview.put("audiourls", audiourls);
+				pageview.put("videourls", videourls);
+				pageview.put("imgurls", imgurls);
+				pageview.put("content", pageTask.getDescription());
+				pageList.add(pageview);
+			}
+
+			data.put("pageList", pageList);
+			data.put("countStep", history.getPageIndex());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return data;
+	}
+
+	/**
+	 * 个人信息查询接口
+	 * 
+	 * @param usertype
+	 *            用户类型 0：学生 1.老师
+	 * @param userid
+	 *            用户id
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/userinfo/userid/{userid}/usertype/{usertype}")
+	public Map<String, Object> userinfo(@PathVariable("usertype") Integer usertype,
+			@PathVariable("userid") Integer userid) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		if (ResultCode.USER_TYPE_STUDENT == usertype) {
+			Student user = studentService.queryStudentById(userid);
+			if (CheckUtil.notEmpty(user)) {
+				result.put("nickname", user.getNickName());
+				result.put("englishname", user.getEnglishName());
+				result.put("sex", user.getSex());
+				result.put("age", user.getAge());
+				result.put("telephone", user.getTelephone());
+				result.put("address", user.getAddress());
+				result.put("pictrueurl",
+						ResourceBundle.getBundle("sysconf").getString("FileServerLocation") + user.getPictureUrl());
+			} else {
+				result.put("code", ResultCode.RESULT_CODE_ERROR);
+				result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			}
+		}
+
+		if (ResultCode.USER_TYPE_TEACHER == usertype) {
+			Teacher user = teacherService.queryTeacherById(userid);
+			if (CheckUtil.notEmpty(user)) {
+				result.put("nickname", user.getNickName());
+				result.put("englishname", user.getEnglishName());
+				result.put("sex", user.getSex());
+				result.put("age", user.getAge());
+				result.put("telephone", user.getTelephone());
+				result.put("address", user.getAddress());
+				result.put("pictrueurl",
+						ResourceBundle.getBundle("sysconf").getString("FileServerLocation") + user.getPictureUrl());
+			} else {
+				result.put("code", ResultCode.RESULT_CODE_ERROR);
+				result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * 学生奖励查询接口
+	 * 
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/rewardinfo/userid/{userid}")
+	public Map<String, Object> rewardinfo(@PathVariable("userid") Integer userid) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		result.put("level", "0");
+		result.put("mainenergy", 0);
+		result.put("levelname", "未获得称号");
+		int[] energys = { 10,20, 30, 40, 50 };
+		result.put("energys", energys);
+		Student student = 	studentService.queryStudentById(userid);
+		if(CheckUtil.notEmpty(student)){
+			if(CheckUtil.notEmpty(student.getPictureUrl())){
+				result.put("pictureUrl", student.getPictureUrl());
+			}else{
+				result.put("pictureUrl", "http://101.200.203.125:8088/static/userupload/pic/1.jpg");
+			}
+		}
+		List<Student> Students =	studentService.queryClassMatesExceptMe(userid);
+		List classmates = Lists.newArrayList();
+		if(CheckUtil.notEmpty(Students)){
+			for (Student s:Students) {
+				Map<String, Object> studentObj = new HashMap<String, Object>();
+				studentObj.put("nickname", s.getNickName());
+				studentObj.put("english", s.getEnglishName());
+				studentObj.put("studentid", s.getId());
+				studentObj.put("pictureUrl", CheckUtil.notEmpty(s.getPictureUrl())?s.getPictureUrl():"http://101.200.203.125:8088/static/userupload/pic/1.jpg");
+				classmates.add(studentObj);
+			}
+		}
+		result.put("classmates", classmates);
+	/*	for (int i = 0; i < 10; i++) {
+			Map<String, Object> student = new HashMap<String, Object>();
+			student.put("nickname", "student" + i);
+			student.put("english", "XX" + i);
+			student.put("studentid", i + 1);
+			student.put("pictureUrl", "http://101.200.203.125:8088/static/userupload/pic/1.jpg");
+			classmates.add(student);
+		}*/
+		result.put("classmates", classmates);
+		return result;
+	}
+
+	/**
+	 * 个人信息更改接口
+	 * 
+	 * @param usertype
+	 *            用户类型 0：学生 1：老师
+	 * @param userid
+	 *            用户id
+	 * @param nickname
+	 *            真名
+	 * @param englishname
+	 *            英文名
+	 * @param sex
+	 *            性别
+	 * @param age
+	 *            年龄
+	 * @param telephone
+	 *            电话
+	 * @param address
+	 *            地址
+	 * @param pictrueUrl
+	 *            头像地址
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/userinfoupdate/userid/{userid}/usertype/{usertype}")
+	public Map<String, Object> userinfoupdata(@PathVariable("usertype") Integer usertype,
+			@PathVariable("userid") Integer userid, @RequestParam(value = "nickname", required = false) String nickname,
+			@RequestParam(value = "englishname", required = false) String englishname,
+			@RequestParam(value = "sex", required = false) Integer sex,
+			@RequestParam(value = "birthday", required = false) String birthday,
+			@RequestParam(value = "age", required = false) Integer age,
+			@RequestParam(value = "address", required = false) String address,
+			@RequestParam(value = "pictureUrl", required = false) String pictrueUrl) {
+		Map<String, Object> result = Maps.newHashMap();
+		result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		try {
+			if (ResultCode.USER_TYPE_STUDENT == usertype) {
+				Student user = studentService.queryStudentById(userid);
+				if (CheckUtil.notEmpty(user)) {
+					user.setNickName(nickname);
+					user.setEnglishName(englishname);
+					user.setSex(sex);
+					user.setAge(age);
+					user.setAddress(address);
+					user.setPictureUrl(pictrueUrl);
+					user.setMemo2(birthday);
+					studentService.updateStudent(user);
+				} else {
+					result.put("code", ResultCode.RESULT_CODE_ERROR);
+					result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+				}
+			}
+			if (ResultCode.USER_TYPE_TEACHER == usertype) {
+				Teacher user = teacherService.queryTeacherById(userid);
+				if (CheckUtil.notEmpty(user)) {
+					user.setNickName(nickname);
+					user.setEnglishName(englishname);
+					user.setSex(sex);
+					user.setAge(age);
+					user.setAddress(address);
+					user.setPictureUrl(pictrueUrl);
+					user.setMemo2(birthday);
+					teacherService.updateTeacher(user);
+				} else {
+					result.put("code", ResultCode.RESULT_CODE_ERROR);
+					result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return result;
+	}
+
+	/**
+	 * 用户头像上传接口
+	 * 
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/userpicupload/userid/{userid}/usertype/{usertype}")
+	public Map<String,Object> userpicupload(@PathVariable("usertype") Integer usertype,
+			@PathVariable("userid") Integer userid,HttpServletRequest request){
+		Map<String,Object> result = new HashMap<>();
+		try {
+			byte[] filedatabytes = null;
+			String filetype = (String) request.getParameterValues("filetype")[0];
+			MultipartHttpServletRequest mresource = (MultipartHttpServletRequest) request;
+			Map<String, MultipartFile>  fileMap = mresource.getFileMap();
+			System.out.println("===============fileMapSize:"+fileMap.size());
+			for (Map.Entry<String, MultipartFile> entity : fileMap.entrySet()) {
+				MultipartFile mf = entity.getValue();
+				filedatabytes = mf.getBytes();
+			}
+			System.out.println("===============filedatabytesSize:"+filedatabytes.length);
+			System.out.println("===============filetype:"+filetype);
+			//保存头像图片
+			Resource resource = resourceService.uploadFileResouce(filedatabytes, ResultCode.SOURCE_USERPIC, filetype);
+			//将头像图片的ＵＲＬ存到学生信息
+			if (ResultCode.USER_TYPE_STUDENT == usertype) {
+				Student user = studentService.queryStudentById(userid);
+				if (CheckUtil.notEmpty(user)) {
+					user.setPictureUrl(resource.getUrl());
+					studentService.updateStudent(user);
+				} else {
+					result.put("code", ResultCode.RESULT_CODE_ERROR);
+					result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+					return result;
+				}
+			}
+			if (ResultCode.USER_TYPE_TEACHER == usertype) {
+				Teacher user = teacherService.queryTeacherById(userid);
+				if (CheckUtil.notEmpty(user)) {
+					user.setPictureUrl(resource.getUrl());
+					teacherService.updateTeacher(user);
+				} else {
+					result.put("code", ResultCode.RESULT_CODE_ERROR);
+					result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+					return result;
+				}
+			}
+			result.put("userpicurl", resource.getUrl());
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return result;
+	}
+	
+
+	/**
+	 * 用户反馈接口
+	 * 
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/userfeeback/userid/{userid}/usertype/{usertype}")
+	public Map<String, Object> userfeeback(@PathVariable("usertype") Integer usertype,
+			@PathVariable("userid") Integer userid, String email, String feedback) {
+		Map<String, Object> result = Maps.newHashMap();
+		if (CheckUtil.isEmpty(userid) || CheckUtil.isEmpty(usertype) || CheckUtil.isEmpty(feedback)
+				|| CheckUtil.isEmpty(email)) {
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_PARAMETER_ERROR_MSG);
+			return result;
+		}
+
+		try {
+			UserFeedback userFeedback = new UserFeedback();
+			userFeedback.setFeedback(feedback);
+			userFeedback.setEmail(email);
+			userFeedback.setUserId(userid);
+			userFeedback.setUserType(usertype);
+			userFeedbackService.addUserFeedback(userFeedback);
+			result.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			result.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			result.put("code", ResultCode.RESULT_CODE_ERROR);
+			result.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return result;
+	}
+
+	/**
+	 * 获取行政区域接口
+	 * 
+	 */
+	@ResponseBody
+	@RequestMapping("/xzqh/list")
+	public Map<String, Object> getXzqhData() {
+		Map<String, Object> data = Maps.newHashMap();
+		data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+		data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		TreeNode treeNode = xzqhService.queryOneXzqh("86");
+		data.put("area", treeNode);
+		return data;
+	}
+
+}

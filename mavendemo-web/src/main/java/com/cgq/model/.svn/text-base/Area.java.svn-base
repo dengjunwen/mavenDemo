@@ -1,0 +1,70 @@
+package com.cgq.model;
+
+// default package
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+/**
+ * Area entity. @author MyEclipse Persistence Tools
+ */
+@Entity
+@Table(name = "t_area", catalog = "xschool")
+public class Area implements java.io.Serializable {
+
+	// Fields
+
+	private Integer id;
+	private String areaCode;
+	private String areaName;
+
+	// Constructors
+
+	/** default constructor */
+	public Area() {
+	}
+
+	/** minimal constructor */
+	public Area(Integer id) {
+		this.id = id;
+	}
+
+	/** full constructor */
+	public Area(Integer id, String areaCode, String areaName) {
+		this.id = id;
+		this.areaCode = areaCode;
+		this.areaName = areaName;
+	}
+
+	// Property accessors
+	@Id
+	@Column(name = "id", unique = true, nullable = false)
+	public Integer getId() {
+		return this.id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	@Column(name = "areaCode", length = 45)
+	public String getAreaCode() {
+		return this.areaCode;
+	}
+
+	public void setAreaCode(String areaCode) {
+		this.areaCode = areaCode;
+	}
+
+	@Column(name = "areaName", length = 45)
+	public String getAreaName() {
+		return this.areaName;
+	}
+
+	public void setAreaName(String areaName) {
+		this.areaName = areaName;
+	}
+
+}

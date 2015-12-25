@@ -1,0 +1,194 @@
+package com.cgq.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.cgq.model.Student;
+import com.cgq.model.Teacher;
+import com.cgq.service.StudentService;
+import com.cgq.service.TeacherService;
+import com.cgq.util.ResultCode;
+import com.google.common.collect.Maps;
+
+/**
+ * 教师基本信息管理
+ * @author zhangbin1
+ *
+ */
+@RequestMapping("/manage/teacher")
+@Controller
+public class TeacherManageController {
+	
+	Logger log = LoggerFactory.getLogger(TeacherManageController.class);
+	@Autowired
+	private TeacherService teacherService;
+
+	/**
+	 * 从已注册的用户中挑选老师
+	 * @return
+	 */
+	@RequestMapping("/pickTeacherFromUsers")
+	@ResponseBody
+	public Map<String,Object> addTeacherFromUsers(String studentid,String type){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			teacherService.addTeacherFromUsers(studentid,type);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("新增老师失败   TeacherManageController  addTeacher"+e);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		}
+		return data;
+	}
+	
+	/**
+	 * 保存老师信息，新增或者更改
+	 * @param teacher
+	 * @return
+	 */
+	@RequestMapping("/save")
+	@ResponseBody
+	public Map<String,Object> save(Teacher teacher){
+		if(teacher.getId()!=null)return updateTeacher(teacher);
+		return addTeacher(teacher);
+	}
+	
+	/**
+	 * 教师新增
+	 * @param teacher
+	 * @return
+	 */
+	@RequestMapping("/add")
+	@ResponseBody
+	public Map<String,Object> addTeacher(Teacher teacher){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			teacherService.addTeacher(teacher);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("新增老师失败   TeacherManageController  addTeacher"+e);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		}
+		return data;
+		
+	}
+	
+	/**
+	 * 根据学生ID查询学生
+	 * @param studentid
+	 * @return
+	 */
+	@RequestMapping("/queryTeacherById")
+	@ResponseBody
+	public Teacher queryById(String teacherid){
+		return teacherService.queryTeacherById(Integer.valueOf(teacherid));
+	}
+	
+	/**
+	 * 教师修改
+	 * @param teacher
+	 * @return
+	 */
+	@RequestMapping("/update")
+	@ResponseBody
+	public Map<String,Object> updateTeacher(Teacher user){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			Teacher userOld = teacherService.queryTeacherById(user.getId());
+			userOld.setNickName(user.getNickName());
+			userOld.setMemo1(user.getMemo1());
+			userOld.setEnglishName(user.getEnglishName());
+			userOld.setSex(user.getSex());
+			userOld.setAge(user.getAge());
+			userOld.setAddress(user.getAddress());
+			userOld.setTelephone(user.getTelephone());
+			teacherService.updateTeacher(userOld);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			log.error("修改学生信息失败   StudentManageController  updateStudent"+e);
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return data;
+
+	}
+	
+	
+	/**
+	 * 删除教师
+	 * @param teacher
+	 * @return
+	 */
+	@RequestMapping("/delete/{id}")
+	@ResponseBody
+	public Map<String,Object> deleteTeacher(@PathVariable(value="id")Integer id){
+		
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			teacherService.deleteTeacher(id);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("删除老师失败   TeacherManageController  deleteTeacher"+e);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		}
+		return data;
+	}
+	
+	/**
+	 * 查询老师
+	 * @param teacher
+	 * @return
+	 */
+	@RequestMapping("/query")
+	@ResponseBody
+	public List<Teacher> getTeacherList(){
+		
+		return teacherService.queryTeacher();
+		
+	}
+	
+	/**
+	 * 查询老师view
+	 * @param teacher
+	 * @return
+	 */
+	@RequestMapping("/list")
+	public String getTeacherListView(){
+		
+		return "teacher/list";
+		
+	}
+
+	@RequestMapping("/queryCompanyTeacher")
+	@ResponseBody
+	public List<Teacher> queryCompanyTeacher(){
+		return teacherService.queryCompanyTeacher();
+	}
+	
+	@RequestMapping("/queryForeignTeachers")
+	@ResponseBody
+	public List<Teacher> queryForeignTeachers(){
+		return teacherService.queryForeignTeachers();
+	}
+	
+}

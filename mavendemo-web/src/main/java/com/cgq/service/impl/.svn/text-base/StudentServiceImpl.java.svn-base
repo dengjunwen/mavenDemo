@@ -1,0 +1,159 @@
+package com.cgq.service.impl;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cgq.mapper.CourseMapper;
+import com.cgq.mapper.StudentClassMapper;
+import com.cgq.mapper.StudentMapper;
+import com.cgq.model.Course;
+import com.cgq.model.Student;
+import com.cgq.model.StudentClass;
+import com.cgq.service.ClassesService;
+import com.cgq.service.StudentService;
+import com.cgq.util.CheckUtil;
+import com.github.pagehelper.PageHelper;
+import com.google.common.collect.Lists;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+@Service
+@Transactional
+public class StudentServiceImpl implements StudentService {
+	
+	@Autowired
+	StudentMapper studentmapper;
+	@Autowired
+	CourseMapper coursemapper;
+	@Autowired
+	StudentClassMapper studentClassMapper;
+	@Resource
+	ClassesService classService;
+	
+	
+	@Override
+	public int addStudent(Student student) throws Exception {
+		
+		return studentmapper.insert(student);
+	}
+
+	@Override
+	public int updateStudent(Student student) throws Exception {
+		return studentmapper.updateByPrimaryKey(student);
+	}
+
+	@Override
+	public int deleteStudent(Integer id) throws Exception {
+		return studentmapper.deleteByPrimaryKey(id);
+	}
+	
+	
+	
+	
+	
+	@Override
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	public List<Student> queryListStudent(Integer pageNo, Integer pageSize) {
+		PageHelper.startPage(pageNo, pageSize);
+		return null;
+	}
+
+	@Override
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	public List<Student> queryAll() {
+		return studentmapper.selectAll();
+	}
+
+	@Override
+	public List<Student> listStudentsNoClass() {
+		return studentmapper.listStudentsNoClass();
+	}
+
+	@Override
+	public Student queryStudentByMolie(String mobile) {
+		// TODO Auto-generated method stub
+		Example example = new Example(Student.class);
+		Criteria criteria =  example.createCriteria();
+		criteria.andEqualTo("telephone", mobile);
+		List<Student> students = studentmapper.selectByExample(example);
+		if(students.size()>0){
+			for(Student student : students){
+				return student;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public Student queryStudentById(Integer id) {
+		Student student = studentmapper.selectByPrimaryKey(id);
+		return CheckUtil.notEmpty(student)?student:null;
+	}
+
+	@Override
+	public List<Student> queryStudentByTaskIdAndCourseId(Integer taskid, Integer classId) {
+		Example e = new Example(Course.class);
+		e.createCriteria().andEqualTo("taskId", taskid).andEqualTo("classid", classId);
+		List<Course> courses = coursemapper.selectByExample(e);
+		List<Object> studentids = Lists.newArrayList();
+		for(Course course:courses){
+			Example studentClassExample = new Example(StudentClass.class);
+			studentClassExample.createCriteria().andEqualTo("classId", course.getClassid()).andEqualTo("status", "0");
+			List<StudentClass> studentClasses = studentClassMapper.selectByExample(studentClassExample);
+			for(StudentClass studentClasss : studentClasses){
+				studentids.add(studentClasss.getStudentId());
+			}
+		}
+		
+		Example studentExample = new Example(Student.class);
+		studentExample.createCriteria().andIn("id", studentids);
+		
+		List<Student> students = studentmapper.selectByExample(studentExample);
+		return students;
+	}
+
+	@Override
+	public List<Student> queryStudentByName(String studentName) {
+		Example e = new Example(Student.class);
+		e.createCriteria().andLike("nickName", "%"+studentName+"%");
+		return studentmapper.selectByExample(e);
+		
+	}
+
+	@Override
+	public List<Student> queryClassMatesExceptMe(Integer userid) {
+		
+		Example e = new Example (StudentClass.class);
+		e.createCriteria().andEqualTo("studentId",userid).andEqualTo("status","0");
+		List<StudentClass> students = studentClassMapper.selectByExample(e);
+		StudentClass studentClass = null ;
+		if(CheckUtil.notEmpty(students)&&students.size()!=0){
+			studentClass = students.get(0);
+		}
+		if(CheckUtil.notEmpty(studentClass)){
+			List<Student>  studentList = classService.listStudentsInClass(studentClass.getClassId().toString());
+		
+			if (CheckUtil.notEmpty(studentList)&&studentList.size()!=0) {
+				for(int i = 0; i<studentList.size();i++){
+						if(studentList.get(i).getId() == userid){
+							studentList.remove(studentList.get(i));
+						}
+				}
+				
+				return  studentList;
+			} 
+			return  null;
+		}
+		
+		return null;
+	}
+
+}

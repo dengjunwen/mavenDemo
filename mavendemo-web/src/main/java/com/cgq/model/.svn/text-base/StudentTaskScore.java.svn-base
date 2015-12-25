@@ -1,0 +1,155 @@
+package com.cgq.model;
+
+import static javax.persistence.GenerationType.IDENTITY;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+/**
+ * 学生任务评价记录表
+ * 
+ * @author wangjie
+ *
+ */
+@Entity
+@Table(name = "t_student_task_score")
+public class StudentTaskScore {
+	
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "id")
+	private Integer id;
+	@Column(name = "studentid")
+	private Integer studentid;
+	@Transient
+	private String studentname;
+	@Column(name = "taskid")
+	private Integer taskid;
+	@Transient
+	private String taskname;
+	@Column(name = "english_score")
+	private Integer englishScore;
+	@Column(name = "science_score")
+	private Integer scienceScore;
+	@Column(name = "creation_score")
+	private Integer creationScore;
+	@Column(name = "resilience_score")
+	private Integer resilienceScore;
+	@Column(name = "independence_score")
+	private Integer independenceScore;
+	@Column(name = "communication_score")
+	private Integer communicationScore;
+	@Column(name = "self_management_score")
+	private Integer selfManagementScore;
+	@Column(name = "learning_attitude_score")
+	private Integer learningAttitudeScore;
+
+	public String getStudentname() {
+		return studentname;
+	}
+
+	public void setStudentname(String studentname) {
+		this.studentname = studentname;
+	}
+
+	public String getTaskname() {
+		return taskname;
+	}
+
+	public void setTaskname(String taskname) {
+		this.taskname = taskname;
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getStudentid() {
+		return studentid;
+	}
+
+	public void setStudentid(Integer studentid) {
+		this.studentid = studentid;
+	}
+
+	public Integer getTaskid() {
+		return taskid;
+	}
+
+	public void setTaskid(Integer taskid) {
+		this.taskid = taskid;
+	}
+
+	public Integer getEnglishScore() {
+		return englishScore;
+	}
+
+	public void setEnglishScore(Integer englishScore) {
+		this.englishScore = englishScore;
+	}
+
+	public Integer getScienceScore() {
+		return scienceScore;
+	}
+
+	public void setScienceScore(Integer scienceScore) {
+		this.scienceScore = scienceScore;
+	}
+
+	public Integer getCreationScore() {
+		return creationScore;
+	}
+
+	public void setCreationScore(Integer creationScore) {
+		this.creationScore = creationScore;
+	}
+
+	public Integer getResilienceScore() {
+		return resilienceScore;
+	}
+
+	public void setResilienceScore(Integer resilienceScore) {
+		this.resilienceScore = resilienceScore;
+	}
+
+	public Integer getIndependenceScore() {
+		return independenceScore;
+	}
+
+	public void setIndependenceScore(Integer independenceScore) {
+		this.independenceScore = independenceScore;
+	}
+
+	public Integer getCommunicationScore() {
+		return communicationScore;
+	}
+
+	public void setCommunicationScore(Integer communicationScore) {
+		this.communicationScore = communicationScore;
+	}
+
+	public Integer getSelfManagementScore() {
+		return selfManagementScore;
+	}
+
+	public void setSelfManagementScore(Integer selfManagementScore) {
+		this.selfManagementScore = selfManagementScore;
+	}
+
+	public Integer getLearningAttitudeScore() {
+		return learningAttitudeScore;
+	}
+
+	public void setLearningAttitudeScore(Integer learningAttitudeScore) {
+		this.learningAttitudeScore = learningAttitudeScore;
+	}
+
+}

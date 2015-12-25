@@ -1,0 +1,65 @@
+package com.cgq.service.impl;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cgq.mapper.ResourceMapper;
+import com.cgq.mapper.StudentTaskPhotoMapper;
+import com.cgq.model.Resource;
+import com.cgq.model.StudentTaskPhoto;
+import com.cgq.service.MobileService;
+import com.cgq.service.StudentTaskPhotoService;
+import com.cgq.util.DateProcess;
+import com.cgq.util.FileSaveUtil;
+import com.cgq.util.ResultCode;
+
+@Service
+public class MobileServiceImpl implements MobileService {
+	@Autowired
+	private ResourceMapper resourceMapper;
+	@Autowired
+	private StudentTaskPhotoMapper studentTaskPhotoMapper;
+	
+	private static Map<String, Integer> filetypeMap = new HashMap<String, Integer>();
+
+	static {
+		filetypeMap.put("mp3", ResultCode.RESOURCE_TYPE_VOICE);
+		filetypeMap.put("caf", ResultCode.RESOURCE_TYPE_VOICE);
+		filetypeMap.put("mp4", ResultCode.RESOURCE_TYPE_VIDEO);
+		filetypeMap.put("mov", ResultCode.RESOURCE_TYPE_VIDEO);
+		filetypeMap.put("MOV", ResultCode.RESOURCE_TYPE_VIDEO);
+		filetypeMap.put("jpg", ResultCode.RESOURCE_TYPE_IMG);
+		filetypeMap.put("png", ResultCode.RESOURCE_TYPE_IMG);
+	}
+
+	
+	@Override
+	public void saveResource(byte[] base64,int source ,int filetype,Integer studentId,Integer taskId) {
+		
+		String filename = System.currentTimeMillis() + "." + "jpg";
+		String fileurlpath="";
+		try {
+			fileurlpath = FileSaveUtil.save(base64, filename);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		Resource resource = new Resource();
+		resource.setCreattime(DateProcess.getSysTime());
+		resource.setSource(source);
+		resource.setType(filetype);
+		resource.setUrl(fileurlpath);
+		resourceMapper.insert(resource);
+		//存储数据到t_student_task_photo
+		StudentTaskPhoto studentTaskPhoto = new StudentTaskPhoto();
+		studentTaskPhoto.setResourceId(resource.getId());
+		studentTaskPhoto.setStudentId(studentId);
+		studentTaskPhoto.setTaskId(taskId);
+		studentTaskPhotoMapper.insertSelective(studentTaskPhoto);
+	}
+
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cgq.mapper.CourseMapper" >
+ 
+ 	<select id="getStudentCurrentTask" resultType="Course" parameterType="Integer">
+ 		SELECT  id,coursename,courseid,taskid,classid,begintime,endtime,teacherid,meetingroomid,areaid,areaname,temporaryteacherid,description,status FROM t_course_new WHERE 
+ 		classid in (select class_id from t_student_class where student_id = #{userid} and status = 0 )  and   endtime >= now()   order by begintime asc limit 0,1 
+ 	</select>
+ 	
+ 	<select id="getTeacherCurrentTask" resultType="Course" parameterType="Integer">
+ 		SELECT  id,coursename,courseid,taskid,classid,begintime,endtime,teacherid,meetingroomid,areaid,areaname,temporaryteacherid,description,status FROM t_course_new WHERE 
+ 		teacherid =  #{userid} and  endtime >= now()  order by begintime asc	limit 0,1 
+ 	</select>
+ 	
+ </mapper>

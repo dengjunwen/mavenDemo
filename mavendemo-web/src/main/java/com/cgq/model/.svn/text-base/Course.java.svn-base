@@ -1,0 +1,196 @@
+package com.cgq.model;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+/**
+ * Course entity. @author MyEclipse Persistence Tools
+ */
+@Entity
+@Table(name = "t_course_new", catalog = "xschool")
+public class Course implements java.io.Serializable {
+
+	// Fields
+	@Id
+	@Column(name = "id", unique = true, nullable = false)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
+	@Column(name = "coursename", length = 45)
+	private String courseName;
+	@Column(name = "courseid", length = 45)
+	private String courseId;
+	@Column(name = "taskid")
+	private Integer taskId;
+	@Column(name = "classid")
+	private Integer classid;
+	@Column(name = "begintime", length = 45)
+	private String beginTime;
+	@Column(name = "endtime", length = 45)
+	private String endTime;
+	@Column(name = "teacherid")
+	private Integer teacherId;
+	@Column(name = "meetingroomid", nullable = false)
+	private Integer TMeetingroomId;
+	@Column(name = "areaid")
+	private Integer areaId;
+	@Column(name = "areaname", length = 45)
+	private String areaName;
+	@Column(name = "temporaryteacherid")
+	private Integer temporaryTeacherId;
+	@Column(name = "description", length = 45)
+	private String description;
+	@Column(name = "status", length = 45)
+	private String status;
+
+	// Constructors
+
+	/** default constructor */
+	public Course() {
+	}
+
+	/** minimal constructor */
+	public Course(Integer id, Integer TMeetingroomId,String courseId) {
+		this.id = id;
+		this.TMeetingroomId = TMeetingroomId;
+		 this.courseId = courseId;
+	}
+
+	/** full constructor */
+	public Course(Integer id, String courseName,String courseId, Integer taskId,
+			Integer classId, String beginTime,
+			String endTime, Integer teacherId, Integer TMeetingroomId,
+			Integer areaId, String areaName, Integer temporaryTeacherId,
+			String description, String status) {
+		this.id = id;
+		this.courseName = courseName;
+		this.courseId = courseId;
+		this.taskId = taskId;
+		this.classid = classId;
+		this.beginTime = beginTime;
+		this.endTime = endTime;
+		this.teacherId = teacherId;
+		this.TMeetingroomId = TMeetingroomId;
+		this.areaId = areaId;
+		this.areaName = areaName;
+		this.temporaryTeacherId = temporaryTeacherId;
+		this.description = description;
+		this.status = status;
+	}
+
+	// Property accessors
+	public Integer getId() {
+		return this.id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public String getCourseName() {
+		return this.courseName;
+	}
+
+	public void setCourseName(String courseName) {
+		this.courseName = courseName;
+	}
+
+	public String getCourseId() {
+		return courseId;
+	}
+
+	public void setCourseId(String courseId) {
+		this.courseId = courseId;
+	}
+
+	public Integer getTaskId() {
+		return this.taskId;
+	}
+
+	public void setTaskId(Integer taskId) {
+		this.taskId = taskId;
+	}
+
+	public Integer getClassid() {
+		return classid;
+	}
+
+	public void setClassid(Integer classid) {
+		this.classid = classid;
+	}
+
+	public String getBeginTime() {
+		return this.beginTime;
+	}
+
+	public void setBeginTime(String beginTime) {
+		this.beginTime = beginTime;
+	}
+
+	public String getEndTime() {
+		return this.endTime;
+	}
+
+	public void setEndTime(String endTime) {
+		this.endTime = endTime;
+	}
+
+	public Integer getTeacherId() {
+		return this.teacherId;
+	}
+
+	public void setTeacherId(Integer teacherId) {
+		this.teacherId = teacherId;
+	}
+
+	public Integer getTMeetingroomId() {
+		return this.TMeetingroomId;
+	}
+
+	public void setTMeetingroomId(Integer TMeetingroomId) {
+		this.TMeetingroomId = TMeetingroomId;
+	}
+
+	public Integer getAreaId() {
+		return this.areaId;
+	}
+
+	public void setAreaId(Integer areaId) {
+		this.areaId = areaId;
+	}
+
+	public String getAreaName() {
+		return this.areaName;
+	}
+
+	public void setAreaName(String areaName) {
+		this.areaName = areaName;
+	}
+
+	public Integer getTemporaryTeacherId() {
+		return this.temporaryTeacherId;
+	}
+
+	public void setTemporaryTeacherId(Integer temporaryTeacherId) {
+		this.temporaryTeacherId = temporaryTeacherId;
+	}
+
+	public String getDescription() {
+		return this.description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getStatus() {
+		return this.status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+}

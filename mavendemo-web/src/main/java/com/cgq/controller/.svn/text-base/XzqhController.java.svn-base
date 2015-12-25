@@ -1,0 +1,192 @@
+package com.cgq.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.cgq.model.TreeNode;
+import com.cgq.model.Xzqh;
+import com.cgq.service.XzqhService;
+import com.cgq.util.JsonUtil;
+import com.cgq.util.ResultCode;
+import com.google.common.collect.Maps;
+
+@RequestMapping("/xzqh")
+@Controller
+public class XzqhController {
+
+	
+	@Autowired
+	private XzqhService xzqhService;
+	
+	Logger LOG = LoggerFactory.getLogger(XzqhController.class);
+	
+	@RequestMapping("/direct")
+	public Object directTree(){
+		return "xzqh/tree";
+	}
+	
+	
+	@RequestMapping(value="/query",method=RequestMethod.GET)
+	@ResponseBody
+	public String queryTreeData(){
+		StringBuffer json = new StringBuffer();
+		List<Xzqh> xzqhlist =  xzqhService.queryXzqh(null);
+		json.append("[");
+		if(xzqhlist!=null &&  xzqhlist.size()>0){
+			for(Xzqh xzqh :xzqhlist){
+				
+				json.append("{\"id\":\"").append(xzqh.getXzqhdm().trim()).append("\",");
+				json.append("\"name\":\"").append(xzqh.getXzqhmc().trim()).append("\",");
+				
+				if(!"0".equals(xzqh.getSjxzqhdm().trim())){
+					json.append("\"pId\":\"").append(xzqh.getSjxzqhdm().toString()).append("\",\"isParent\":\"false\" },");
+				}else{
+					json.append("\"pId\":\"").append(xzqh.getSjxzqhdm().toString()).append("\",\"isParent\":\"true\" },");
+				}
+			}
+			json.deleteCharAt(json.length() -1);
+			json.append("]");
+		}
+		System.out.println(json);
+		return json.toString();
+	}
+	
+	@RequestMapping(value="/queryTreeByParam",method=RequestMethod.POST)
+	@ResponseBody
+	public String queryTreeByParam(@RequestParam(value= "sjxzqhdm", required = true) String sjxzqhdm){
+		StringBuffer json = new StringBuffer();
+		Xzqh x = new Xzqh();
+		x.setSjxzqhdm(sjxzqhdm);
+		List<Xzqh> xzqhlist =  xzqhService.queryXzqh(x);
+		json.append("[");
+		if(xzqhlist!=null &&  xzqhlist.size()>0){
+			for(Xzqh xzqh :xzqhlist){
+				json.append("{\"id\":\"").append(xzqh.getXzqhdm().trim()).append("\",");
+				json.append("\"name\":\"").append(xzqh.getXzqhmc().trim()).append("\",");
+				
+				if(null!=xzqh.getIsChild() && "1".equals(xzqh.getIsChild().trim())){
+					json.append("\"pId\":\"").append(xzqh.getSjxzqhdm().toString()).append("\",\"isParent\":\"false\" },");
+				}else{
+					json.append("\"pId\":\"").append(xzqh.getSjxzqhdm().toString()).append("\",\"isParent\":\"true\" },");
+				}
+			}
+			json.deleteCharAt(json.length() -1);
+			json.append("]");
+		}
+		return json.toString();
+	}
+	
+	@RequestMapping("/querySingle")
+	@ResponseBody
+	public Object querySingleXzqh(@RequestParam(value= "xzqhdm", required = true) String xzqhdm){
+		Xzqh x = new Xzqh();
+		x.setXzqhdm(xzqhdm);
+		Xzqh xx =  xzqhService.queryOneXzqh(x);
+		return xx;
+	}
+	
+	@RequestMapping(value="/insert",method=RequestMethod.POST)
+	@ResponseBody
+	public Map<String,Object>  insertXzqh(Xzqh xzqh){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			Map<String,Object> map = new HashMap<String,Object>();
+			map.put("xzqhdm", xzqh.getXzqhdm());
+			map.put("xzqhmc", xzqh.getXzqhmc());
+			map.put("xzqhbm", xzqh.getXzqhbm());
+			map.put("sjxzqhdm", xzqh.getSjxzqhdm());
+			map.put("sjxzqhmc", xzqh.getSjxzqhmc());
+			map.put("cjry", xzqh.getCjry());
+			map.put("ischild", xzqh.getIsChild());
+			Integer id =xzqh.getId();
+			if(null !=id ){
+				map.put("id", id);
+				xzqhService.updateXzqh(map);
+			}else{
+				xzqhService.insertXzqh(map);
+			}
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			LOG.error("添加学生失败   XzqhController  insertXzqh"+e);
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return data;
+	}
+	
+	
+	@RequestMapping(value="/update",method=RequestMethod.POST)
+	@ResponseBody
+	public Map<String,Object>  updateXzqh(Xzqh xzqh){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			//xzqhService.updateXzqh(xzqh);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			e.printStackTrace();
+			LOG.error("更新学生失败   XzqhController  updateXzqh"+e);
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return data;
+		
+	}
+	
+	
+	@RequestMapping(value="/delete",method=RequestMethod.GET)
+	@ResponseBody
+	public Map<String,Object> deleteXzqh(Xzqh xzqh){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			//Map<String,Object> map = new HashMap<String,Object>();
+			if(null !=xzqh.getXzqhdm()|| null !=xzqh.getId()){
+				//map.put("xzqhdm", xzqh.getXzqhbm());
+				//map.put("id", xzqh.getId());
+				
+				xzqhService.deleteXzqh(xzqh);
+			}
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			e.printStackTrace();
+			LOG.error("删除学生失败   XzqhController  deleteXzqh"+e);
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return data;
+	}
+	
+	
+	@RequestMapping(value="/queryJson")
+	@ResponseBody
+	public String  queryJson(Xzqh xzqh){
+		TreeNode n =  xzqhService.queryOneXzqh("163");
+		String s = JsonUtil.object2json(n);
+		System.out.println(">>>>>>>>>>>>"+s);
+		return s;
+	}
+	
+	
+	@RequestMapping(value="/insertData",method=RequestMethod.GET)
+	@ResponseBody
+	public void  insertData(Xzqh xzqh){
+		//xzqhService.insertData();
+		xzqhService.clearData();
+	}
+	
+	
+}

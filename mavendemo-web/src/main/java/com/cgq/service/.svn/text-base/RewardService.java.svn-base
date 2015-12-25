@@ -1,0 +1,26 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.Reward;
+
+public interface RewardService {
+	
+	/**
+	 * 记录用户获奖记录
+	 * @param reward
+	 * @throws Exception
+	 */
+	public void addReward(Reward reward) throws Exception;
+	
+	/**
+	 * 删除用户当前的获奖记录
+	 * @param id
+	 * @throws Exception
+	 */
+	public void deleteReward(Integer id) throws  Exception;
+	
+	
+	public List<Reward> queryRewardByUserIdAndTaskId(Integer userId,Integer taskId);
+	
+}

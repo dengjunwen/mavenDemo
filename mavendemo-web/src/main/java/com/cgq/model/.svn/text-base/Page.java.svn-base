@@ -1,0 +1,197 @@
+package com.cgq.model;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+/**
+ * Page entity. @author MyEclipse Persistence Tools
+ */
+/**
+ * @author zhangbin1
+ *
+ */
+@Entity
+@Table(name = "t_page")
+public class Page implements java.io.Serializable {
+
+	@Id
+	@Column(name = "id", unique = true, nullable = false)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
+	private String pageid;
+	private String pagename;
+	private String resourceid;
+	private Integer isAnswer = 0;
+	private String uploadUrl;
+	@Column(name="sort_index")
+	private Integer sortIndex;
+	@Transient
+	//页面是task的第几步,关联task_page表后查询得到
+	private Integer pageindex;
+	//页面，描述信息， 文字信息
+	@Column(name="description")
+	private String description;
+	//是否需要完成任务 0.无需完成任务，1.需要完成任务   2.需要依赖其他页面资源
+	@Column(name = "status")
+	private Integer status;
+	//ORM框架忽略该属性
+	@Transient
+	private Resource resource;
+	
+	// Constructors
+
+	/** default constructor */
+	public Page() {
+	}
+
+	/** minimal constructor */
+	public Page(Integer id, String resourceid) {
+		this.id = id;
+		this.resourceid = resourceid;
+	}
+
+	
+	public Page(Integer id, String pageid, String pagename,
+			String resourceid, Integer pageindex, Integer status, Resource resource) {
+		super();
+		this.id = id;
+		this.pageid = pageid;
+		this.pagename = pagename;
+		this.resourceid = resourceid;
+		this.pageindex = pageindex;
+		this.status = status;
+		this.resource = resource;
+	}
+
+	// Property accessors
+	
+	public Integer getId() {
+		return this.id;
+	}
+
+	public Integer getPageindex() {
+		return pageindex;
+	}
+
+	public void setPageindex(Integer pageindex) {
+		this.pageindex = pageindex;
+	}
+
+	public Resource getResource() {
+		return resource;
+	}
+
+	public void setResource(Resource resource) {
+		this.resource = resource;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	@Column(name = "pageid")
+	public String getPageid() {
+		return this.pageid;
+	}
+
+	public void setPageid(String pageid) {
+		this.pageid = pageid;
+	}
+
+	@Column(name = "pagename", length = 45)
+	public String getPagename() {
+		return this.pagename;
+	}
+
+	public void setPagename(String pagename) {
+		this.pagename = pagename;
+	}
+
+/*	@Column(name = "x")
+	public Double getX() {
+		return this.x;
+	}
+
+	public void setX(Double x) {
+		this.x = x;
+	}
+
+	@Column(name = "y")
+	public Double getY() {
+		return this.y;
+	}
+
+	public void setY(Double y) {
+		this.y = y;
+	}
+	
+	
+	@Column(name = "xx")
+	public Double getXx() {
+		return xx;
+	}
+
+	public void setXx(Double xx) {
+		this.xx = xx;
+	}
+	@Column(name = "yy")
+	public Double getYy() {
+		return yy;
+	}
+
+	public void setYy(Double yy) {
+		this.yy = yy;
+	}*/
+
+	@Column(name = "resourceid", nullable = false)
+	public String getResourceid() {
+		return resourceid;
+	}
+
+	public void setResourceid(String resourceid) {
+		this.resourceid = resourceid;
+	}
+	public Integer getStatus() {
+		return status;
+	}
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+	@Column(name="is_answer")
+	public Integer getIsAnswer() {
+		return isAnswer;
+	}
+	public void setIsAnswer(Integer isAnswer) {
+		this.isAnswer = isAnswer;
+	}
+	
+	@Column(name="upload_url")
+	public String getUploadUrl() {
+		return uploadUrl;
+	}
+	public void setUploadUrl(String uploadUrl) {
+		this.uploadUrl = uploadUrl;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public Integer getSortIndex() {
+		return sortIndex;
+	}
+
+	public void setSortIndex(Integer sortIndex) {
+		this.sortIndex = sortIndex;
+	}
+	
+	
+	
+}

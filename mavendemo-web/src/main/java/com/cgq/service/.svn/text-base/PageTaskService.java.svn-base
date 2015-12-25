@@ -1,0 +1,20 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.PageTask;
+
+public interface PageTaskService {
+	
+	public PageTask queryByPageId(Integer taskId,Integer index);
+	
+	public List<PageTask> queryAllPages();
+	
+	public List<PageTask> queryAllStaticPages();
+	
+	public PageTask savePageTask(PageTask pageTask) throws Exception;
+	
+	public List<PageTask> getAllNoTaskPage();
+	
+	public void updateTask(Integer[] pageIds,Integer[] pageIndex,Integer taskId)throws Exception;
+}

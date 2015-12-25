@@ -1,0 +1,22 @@
+package com.cgq.service.impl;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cgq.mapper.UserFeedbackMapper;
+import com.cgq.model.UserFeedback;
+import com.cgq.service.UserFeedbackService;
+@Service
+@Transactional
+public class UserFeedbackServiceImpl implements UserFeedbackService {
+
+	@Autowired
+	private UserFeedbackMapper userFeedbackMapper;
+	
+	@Override
+	public void addUserFeedback(UserFeedback userFeedback) throws Exception {
+		userFeedbackMapper.insertSelective(userFeedback);
+	}
+
+}

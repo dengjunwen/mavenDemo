@@ -1,0 +1,27 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.StudentTaskScore;
+
+public interface StudentTaskScoreService {
+
+	List<StudentTaskScore> listStudentTaskHistory();
+
+	/**
+	 * 保存学生的评分
+	 * @param studentTaskScore
+	 */
+	void saveStudentScore(StudentTaskScore studentTaskScore);
+
+	/**
+	 * 根据学生ID和任务ID更新已存在的评分
+	 * @param studentTaskScore
+	 * @return 受影响的行数
+	 */
+	int updateStudentScoreByStudentidAndTaskid(StudentTaskScore studentTaskScore);
+	
+	
+	StudentTaskScore getStudentTaskScoreByStudentIdAndTaskId(Integer studentId,Integer taskId);
+
+}

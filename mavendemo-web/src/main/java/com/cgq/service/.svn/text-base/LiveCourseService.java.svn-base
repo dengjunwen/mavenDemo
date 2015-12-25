@@ -1,0 +1,10 @@
+package com.cgq.service;
+
+import com.cgq.model.LiveCourse;
+import com.cgq.model.Meetingroom;
+
+public interface LiveCourseService {
+	public  LiveCourse instance(String courseid) throws Exception;
+
+	void freeMeetingRoom(Meetingroom meetingroom);
+}

@@ -1,0 +1,10 @@
+package com.cgq.mapper;
+
+import com.cgq.model.StudentTaskPhoto;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface StudentTaskPhotoMapper extends Mapper<StudentTaskPhoto> {
+	
+	
+}

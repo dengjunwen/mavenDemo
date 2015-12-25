@@ -1,0 +1,257 @@
+package com.cgq.service.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cgq.mapper.XzqhMapper;
+import com.cgq.model.TreeNode;
+import com.cgq.model.WxXzqh;
+import com.cgq.model.Xzqh;
+import com.cgq.service.XzqhService;
+@Service
+@Transactional
+public class XzqhServiceImpl implements XzqhService {
+
+	@Autowired
+	private XzqhMapper xzqhMapper;
+	
+
+	@Override
+	public void insertXzqh(Xzqh xzqh) {
+		xzqhMapper.insert(xzqh);
+	}
+
+	@Override
+	public void deleteXzqh(Xzqh xzqh) {
+		xzqhMapper.deleteXzqh(xzqh);
+	}
+
+	@Override
+	public List<Xzqh> queryXzqh(Xzqh xzqh) {
+		return xzqhMapper.queryXzqh(xzqh);
+	}
+
+	@Override
+	public Xzqh queryOneXzqh(Xzqh xzqh) {
+		Xzqh x1 = xzqhMapper.queryOneXzqh(xzqh);
+		//Xzqh xx = new Xzqh();
+		//xx.setXzqhdm(x1.getSjxzqhdm());
+		//xx = xzqhMapper.queryOneXzqh(xx);
+		//x1.setSjxzqhmc(xx.getXzqhmc());
+		return x1;
+	}
+
+	@Override
+	public void insertXzqh(Map<String, Object> map) {
+		xzqhMapper.insertXzqh(map);
+	}
+
+	@Override
+	public void updateXzqh(Map<String, Object> map) {
+		xzqhMapper.updateXzqh(map);
+		
+	}
+
+	@Override
+	public TreeNode queryOneXzqh(String param) {
+		Xzqh x = new Xzqh();
+		x.setXzqhdm(param);
+		
+		Xzqh x1 = xzqhMapper.queryOneXzqh(x);
+		TreeNode tn = new TreeNode();
+		
+		if(x1!=null){
+			tn.setId(x1.getXzqhdm());
+			tn.setName(x1.getXzqhmc());
+			tn.setpId(x1.getSjxzqhdm());
+			
+			List<TreeNode> ll = queryListXzqh(x1.getXzqhdm());
+			
+			for(TreeNode child : ll){
+				TreeNode n = queryOneXzqh(child.getId()); //递归
+				tn.getChildren().add(n);
+			}
+		}
+		return tn;
+	}
+
+	@Override
+	public List<TreeNode> queryListXzqh(String param) {
+		Xzqh x = new Xzqh();
+		x.setSjxzqhdm(param);	
+		List<Xzqh> list = xzqhMapper.queryXzqh(x);
+		List<TreeNode> l =  new ArrayList<TreeNode>();
+		for(Xzqh x1:list){
+			TreeNode tn = new TreeNode();
+			tn.setId(x1.getXzqhdm());
+			tn.setName(x1.getXzqhmc());
+			tn.setpId(x1.getSjxzqhdm());
+			l.add(tn);
+		}
+		return l;
+	}
+
+	@Override
+	public void insertData() {
+		List<WxXzqh> wList = xzqhMapper.querySC();
+		
+		if(wList!=null && wList.size()>0){
+			
+			for(WxXzqh ww: wList){
+				Integer  id = ww.getXzqh_id();
+				
+				Map<String,Object> m = new HashMap<String,Object>();
+				m.put("xzqh_id", id);
+				WxXzqh w = xzqhMapper.queryScArea(m);
+				//获取名称;
+				String name="";
+				String fullname="";
+				
+				if(w!=null){
+					name= w.getXzqh_name();
+					fullname=w.getXzqh_fullname();
+				}else{
+					name=ww.getXzqh_name();
+					fullname=ww.getXzqh_name();
+				}
+				//获取上级的id和名称;
+				String pid =ww.getParent();
+				String bb = ww.getBelong();
+				if(pid.equalsIgnoreCase("0")){
+					pid = bb;
+				}
+				//判断是否存在上级节点;
+				//如果存在才插入不存在不插入
+				Map<String,Object> mmm = new HashMap<String,Object>();
+				mmm.put("xzqh_id", pid);
+				WxXzqh flag=xzqhMapper.queryOneSC(mmm);
+				boolean insertFlag =true;
+				if(flag==null && !pid.equalsIgnoreCase("0")){
+					insertFlag = false;
+				}
+				
+				
+				Map<String,Object> m2 = new HashMap<String,Object>();
+				m.put("xzqh_id", pid);
+				//
+				WxXzqh w1 = xzqhMapper.queryScArea(m2);
+				String pname ="";
+				if(w1!=null){
+					pname = w1.getXzqh_name();
+				}
+				
+				System.out.println(id);
+				System.out.println(name);
+				System.out.println(fullname);
+				System.out.println(pid);
+				System.out.println(">>>>>>>>>>>>>>>>>  "+pname);
+				
+				Map<String,Object> rm = new HashMap<String,Object>();
+				rm.put("xzqhdm", id);
+				rm.put("xzqhmc", name);
+				rm.put("xzqhbm", fullname);
+				rm.put("sjxzqhdm",pid);
+				rm.put("sjxzqhmc", pname);
+				rm.put("ischild", "0");
+				
+				if(insertFlag){
+					xzqhMapper.insertXzqh(rm);
+				}
+				
+			}
+		}
+	}
+
+	@Override
+	public void clearData() {
+		
+		deleteDustData();
+		setSjxzqhmc();
+		
+		List<Xzqh> list = queryXzqh(null);
+		if(list!=null && list.size()>0){
+			for(Xzqh xx: list){
+				/*if(!name.contains("中国")){
+					Xzqh xq = new Xzqh();
+					xq.setXzqhdm(sjxzqhdm);
+					Xzqh ff = xzqhMapper.queryOneXzqh(xq);
+					if(ff==null){
+						xzqhMapper.delete(xx);
+					}
+				}*/
+				/*Xzqh xq = new Xzqh();
+				xq.setXzqhdm(sjxzqhdm);
+				Xzqh ff = xzqhMapper.queryOneXzqh(xq);
+				if(ff!=null && ff.getXzqhmc()!=null){
+					String sjmc = ff.getXzqhmc();
+					Map<String,Object> rm = new HashMap<String,Object>();
+					rm.put("sjxzqhmc", sjmc);
+					rm.put("xzqhdm", xx.getXzqhdm());
+					xzqhMapper.updateXzqh1(rm);
+				}*/
+				
+				//添加子节点标识位；
+				String xzqhdm = xx.getXzqhdm();
+				//查找sjxzqhdm是否存在;
+				Xzqh xq = new Xzqh();
+				xq.setSjxzqhdm(xzqhdm);
+				List<Xzqh> ff = xzqhMapper.queryXzqh(xq);
+				if(null == ff || ff.size() ==0){
+					Map<String,Object> rm = new HashMap<String,Object>();
+					rm.put("ischild", "1");
+					rm.put("xzqhdm", xzqhdm);
+					xzqhMapper.updateXzqh1(rm);
+				}
+			}
+		}
+		
+		
+	}
+	
+	//删除一些其他国家的信息
+	
+	private void deleteDustData(){
+		List<Xzqh> list = queryXzqh(null);
+		if(list!=null && list.size()>0){
+			for(Xzqh xx: list){
+				String name = xx.getXzqhmc();
+				String sjxzqhdm = xx.getSjxzqhdm();
+				if(!name.contains("中国")){
+					Xzqh xq = new Xzqh();
+					xq.setXzqhdm(sjxzqhdm);
+					Xzqh ff = xzqhMapper.queryOneXzqh(xq);
+					if(ff==null){
+						xzqhMapper.deleteXzqh(xx);
+					}
+				}
+			}
+		}
+	}
+
+	private void setSjxzqhmc(){
+		List<Xzqh> list = queryXzqh(null);
+		if(list!=null && list.size()>0){
+			for(Xzqh xx: list){
+				String sjxzqhdm = xx.getSjxzqhdm();
+				Xzqh xq = new Xzqh();
+				xq.setXzqhdm(sjxzqhdm);
+				Xzqh ff = xzqhMapper.queryOneXzqh(xq);
+				if(ff!=null && ff.getXzqhmc()!=null){
+					String sjmc = ff.getXzqhmc();
+					Map<String,Object> rm = new HashMap<String,Object>();
+					rm.put("sjxzqhmc", sjmc);
+					rm.put("xzqhdm", xx.getXzqhdm());
+					if(null!=sjmc && !"".equalsIgnoreCase(sjmc)){
+						xzqhMapper.updateXzqh1(rm);
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,54 @@
+package com.cgq.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cgq.mapper.UserMapper;
+import com.cgq.model.User;
+import com.cgq.service.UserService;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.MD5;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+@Service
+@Transactional
+public class UserServiceImpl implements UserService {
+
+	
+	@Autowired
+	private UserMapper userMapper;
+	
+	@Override
+	public int addUser(User u) throws Exception {
+		return userMapper.insert(u);
+	}
+
+	@Override
+	public User queryByNameAndPass(String username, String password) {
+		Example e = new Example(User.class);
+		Criteria criteria = e.createCriteria();
+		criteria.andEqualTo("userName", username).andEqualTo("password", password);
+		List<User> list = userMapper.selectByExample(e);
+		return 	CheckUtil.notEmpty(list)?list.get(0):null;
+	}
+
+	@Override
+	public User queryByName(String username) {
+		Example e = new Example(User.class);
+		Criteria criteria = e.createCriteria();
+		criteria.andEqualTo("userName", username);
+		List<User> list = userMapper.selectByExample(e);
+		return 	CheckUtil.notEmpty(list)?list.get(0):null;
+	}
+
+	@Override
+	public User login(String username, String password) {
+		password = MD5.md5(password);
+		return queryByNameAndPass(username, password);
+	}
+
+}

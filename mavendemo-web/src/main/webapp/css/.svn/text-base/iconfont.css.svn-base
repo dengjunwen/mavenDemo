@@ -1,0 +1,36 @@
+@font-face {
+  font-family: 'iconfont';
+  src: url('http://at.alicdn.com/t/font_1438938350_504772.eot'); /* IE9*/
+  src: url('http://at.alicdn.com/t/font_1438938350_504772.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+  url('http://at.alicdn.com/t/font_1438938350_504772.woff') format('woff'), /* chrome、firefox */
+  url('http://at.alicdn.com/t/font_1438938350_504772.ttf') format('truetype'), /* chrome、firefox、opera、Safari, Android, iOS 4.2+*/
+  url('http://at.alicdn.com/t/font_1438938350_504772.svg#iconfont') format('svg'); /* iOS 4.1- */
+}
+.iconfont,.iconfont:before,.iconfont:after{ font-family:"iconfont"; font-style:normal; font-size:12px; vertical-align:baseline; display:inline-block;}
+.fontsize10{ font-size:10px;}
+.fontsize12{ font-size:12px;}
+.fontsize14{ font-size:14px;}
+.fontsize16{ font-size:16px;}
+.fontsize18{ font-size:18px;}
+.fontsize20{ font-size:20px;}
+.fontsize22{ font-size:22px;}
+.fontsize24{ font-size:24px;}
+.fontsize26{ font-size:26px;}
+.fontsize28{ font-size:28px;}
+.fontsize30{ font-size:30px;}
+.fontsize32{ font-size:32px;}
+.fontsize34{ font-size:34px;}
+.fontsize36{ font-size:36px;}
+.fontsize38{ font-size:38px;}
+.fontsize40{ font-size:40px;}
+.fontsize42{ font-size:42px;}
+.fontsize44{ font-size:44px;}
+.fontsize46{ font-size:46px;}
+.fontsize48{ font-size:48px;}
+.fontsize50{ font-size:50px;}
+.fontsize52{ font-size:52px;}
+.fontsize54{ font-size:54px;}
+.fontsize56{ font-size:56px;}
+.fontsize58{ font-size:58px;}
+.fontsize60{ font-size:60px;}
+.fontsize62{ font-size:62px;}

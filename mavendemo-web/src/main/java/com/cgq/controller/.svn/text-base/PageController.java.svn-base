@@ -1,0 +1,169 @@
+package com.cgq.controller;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.cgq.model.Page;
+import com.cgq.model.PageTask;
+import com.cgq.model.Task;
+import com.cgq.service.PageService;
+import com.cgq.service.PageTaskService;
+import com.cgq.service.ResourceService;
+import com.cgq.service.TaskService;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.DateProcess;
+import com.cgq.util.ResultCode;
+import com.google.common.collect.Maps;
+@Controller
+@RequestMapping("/manage")
+public class PageController {
+
+	@Autowired
+	private PageService pageService;
+	@Autowired
+	private PageTaskService pageTaskService;
+	@Autowired
+	private ResourceService resourceService;
+	@Autowired
+	private TaskService taskService;
+	
+	/**
+	 * 获取大page
+	 * @return
+	 */
+	@RequestMapping("/page/list")
+	public String getPageList(){
+		return "page/list";
+	}
+	
+	
+	@RequestMapping("/online")
+	public String addOnlinePage(){
+		return "page/addOnline";
+	}
+	
+	
+	@RequestMapping("/page/saveOnlineTask")
+	@ResponseBody
+	public Map<String,Object> saveOnlineTask(Task task,Integer[] pageId,Integer[] sortIndex){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			int countStep = 	pageId.length;
+			task.setCountStep(countStep);
+			task.setCreateTime(DateProcess.getSysTime());
+			taskService.saveTask(task);
+			pageTaskService.updateTask(pageId, sortIndex, task.getId());
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+			e.printStackTrace();
+		}
+		return data;
+	}
+	
+	/**
+	 * 获取大页面
+	 * @return
+	 */
+	@RequestMapping("/page/datalist")
+	@ResponseBody
+	public List<PageTask> getPageDataList(){
+		List<PageTask> taskPages = pageTaskService.queryAllPages();
+		return taskPages;
+	}
+	
+	
+	/**
+	 * 获取小页面
+	 * @return
+	 */
+	@RequestMapping("/page/detail/pageId/{pageId}")
+	public ModelAndView getPageDetail(@PathVariable("pageId")String pageId){
+		
+		ModelAndView view = new ModelAndView("page/detail");
+		List<Page> pages = 	pageService.queryPageByPageid(pageId);
+		view.addObject("pages", pages);
+		return view;
+	}
+	
+	/**
+	 * 新增addPage
+	 * @return
+	 */
+	@RequestMapping("/page/addPage")
+	public String addPageView(){
+		return "page/addPage";
+	}
+	
+	/**
+	 * 创建大页面， 小页面  pageTask ，page
+	 * @return
+	 */
+	@RequestMapping("/page/save")
+	@ResponseBody
+	public Map<String,Object> savePage(String list,PageTask pageTask){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			List<Page> pages = JSON.parseArray(list, Page.class);
+			pageTask.setPageIndex(1);
+			pageTask.setTpageId(UUID.randomUUID().toString());
+			pageTaskService.savePageTask(pageTask);
+			
+			for(Page p:pages){
+				p.setPageid(pageTask.getTpageId());
+				pageService.SavePage(p);
+			}
+			
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		
+		return data;
+	}
+	
+	/**
+	 * 删除页面
+	 * @return
+	 */
+	@RequestMapping("/page/delete")
+	@ResponseBody
+	public Map<String,Object> deletePage(){
+		Map<String,Object> data = Maps.newHashMap();
+		
+		return data;
+	}
+	
+	@RequestMapping("/page/noTaskpage")
+	@ResponseBody
+	public Map<String,Object> getNoTaskPage(){
+		Map<String,Object> data = Maps.newHashMap();
+		List<PageTask> pageTasks = pageTaskService.getAllNoTaskPage();
+		if(CheckUtil.isEmpty(pageTasks)){
+			data.put("code",ResultCode.RESULT_CODE_ERROR);
+			data.put("msg",ResultCode.RESULT_CODE_ERROR_MSG);
+			return data;
+		}
+		data.put("code",ResultCode.RESULT_CODE_SUCCESS);
+		data.put("msg",ResultCode.RESULT_CODE_SUCCESS_MSG);
+		data.put("pageTasks", pageTasks);
+		return data;
+	}
+	
+}

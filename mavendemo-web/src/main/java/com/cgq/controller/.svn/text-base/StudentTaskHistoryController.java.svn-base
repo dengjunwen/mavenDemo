@@ -1,0 +1,66 @@
+package com.cgq.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.cgq.model.StudentTaskHistory;
+import com.cgq.service.StudentTaskHistoryService;
+import com.cgq.service.StudentTaskPageHistoryService;
+import com.cgq.util.ResultCode;
+
+/**
+ * 学生任务历史
+ * @author wangjie
+ *
+ */
+@RequestMapping("/manage/studentTaskHistory")
+@Controller
+public class StudentTaskHistoryController {
+	
+	@Autowired
+	private StudentTaskHistoryService studentTaskHistoryService;
+	
+	/**
+	 * 跳转列表页面
+	 * @return
+	 */
+	@RequestMapping("/list")
+	public String list(){
+		return "studentTaskHistory";
+	}
+	
+	/**
+	 * 查询所有的历史记录
+	 * @return
+	 */
+	@RequestMapping("/listStudentTaskHistory")
+	@ResponseBody
+	public List<StudentTaskHistory> listStudentTaskHistory(){
+		return studentTaskHistoryService.listAll();
+	}
+	
+	/**
+	 * 删除相关的任务记录
+	 * @return
+	 */
+	@RequestMapping("/delStudentTaskHistory")
+	@ResponseBody
+	public Map<String,Object> delStudentTaskHistory(Integer historyid){
+		Map<String,Object> result = new HashMap<String, Object>();
+		try {
+			studentTaskHistoryService.delStudentTaskHistory(historyid);
+			result.put("code",  ResultCode.RESULT_CODE_SUCCESS);
+		} catch (Exception e) {
+			// TODO: handle exception
+			result.put("code",  ResultCode.RESULT_CODE_ERROR);
+		}
+		//删除相关的任务记录
+		return result;
+	}
+}

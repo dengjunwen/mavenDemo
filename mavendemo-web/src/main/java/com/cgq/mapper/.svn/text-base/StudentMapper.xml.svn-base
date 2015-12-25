@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cgq.mapper.StudentMapper">
+	<select id="listStudentsByClassId" resultType="Student">
+		SELECT
+		a.id
+		id,a.nick_name nickName,a.english_name englishName,a.sex sex,a.age
+		age,a.area_id areaId,a.area_name areaName,a.address
+		address,a.telephone telephone
+		FROM t_student a left join
+		t_student_class b on a.id = b.student_id
+		where b.class_id = #{classid} and status = 0 
+		ORDER BY a.ID DESC
+	</select>
+	
+	<select id="listStudentsNoClass" resultType="Student">
+		SELECT
+		a.id 
+		id,a.nick_name nickName,a.english_name englishName,a.sex sex,a.age
+		age,a.area_id areaId,a.area_name areaName,a.address
+		address,a.telephone telephone
+		FROM t_student a where a.id not in(
+		select distinct b.student_id from  t_student_class b where b.status = 0  
+		)
+	</select>
+	
+</mapper>

@@ -1,0 +1,88 @@
+package com.cgq.model;
+
+import static javax.persistence.GenerationType.IDENTITY;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+@Entity
+@Table(name = "t_student_checklist_detail", catalog = "xschool")
+public class StudentCheckListDetail implements java.io.Serializable {
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	@Column(name = "check_list_id")
+	private Integer checkListId;
+	@Column(name = "content")
+	private String content;
+	@Column(name = "content_index")
+	private Integer contentIndex;
+	@Column(name = "starttime")
+	private String starttime;
+	@Column(name = "endtime")
+	private String endtime;
+	@Transient
+	private int isDone; //1完成 0未完成
+	
+	public String getStarttime() {
+		return starttime;
+	}
+
+	public void setStarttime(String starttime) {
+		this.starttime = starttime;
+	}
+
+	public String getEndtime() {
+		return endtime;
+	}
+
+	public void setEndtime(String endtime) {
+		this.endtime = endtime;
+	}
+
+	public int getIsDone() {
+		return isDone;
+	}
+
+	public void setIsDone(int isDone) {
+		this.isDone = isDone;
+	}
+
+	public Integer getContentIndex() {
+		return contentIndex;
+	}
+
+	public void setContentIndex(Integer contentIndex) {
+		this.contentIndex = contentIndex;
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getCheckListId() {
+		return checkListId;
+	}
+
+	public void setCheckListId(Integer checkListId) {
+		this.checkListId = checkListId;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+}

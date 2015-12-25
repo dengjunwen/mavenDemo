@@ -1,0 +1,115 @@
+package com.cgq.model;
+
+import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+@Entity
+@Table(name = "t_xzqh", catalog = "xschool")
+public class Xzqh implements Serializable {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	
+	private String xzqhdm;
+	private String xzqhmc;
+	private String xzqhbm;
+	private String sjxzqhdm;
+	private String sjxzqhmc;
+	private String cjry;
+	private Timestamp cjsj;
+	private String isChild;
+	
+	public Xzqh(Integer id, String xzqhdm, String xzqhmc, String xzqhbm,
+			String sjxzqhdm,String sjxzqhmc, String cjry, Timestamp cjsj,String isChild) {
+		super();
+		this.id = id;
+		this.xzqhdm = xzqhdm;
+		this.xzqhmc = xzqhmc;
+		this.xzqhbm = xzqhbm;
+		this.sjxzqhdm = sjxzqhdm;
+		this.sjxzqhmc = sjxzqhmc;
+		this.cjry = cjry;
+		this.cjsj = cjsj;
+		this.isChild = isChild;
+	}
+	
+	
+	public Xzqh() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+	public Integer getId() {
+		return id;
+	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	public String getXzqhdm() {
+		return xzqhdm;
+	}
+	public void setXzqhdm(String xzqhdm) {
+		this.xzqhdm = xzqhdm;
+	}
+	public String getXzqhmc() {
+		return xzqhmc;
+	}
+	public void setXzqhmc(String xzqhmc) {
+		this.xzqhmc = xzqhmc;
+	}
+	public String getXzqhbm() {
+		return xzqhbm;
+	}
+	public void setXzqhbm(String xzqhbm) {
+		this.xzqhbm = xzqhbm;
+	}
+	public String getSjxzqhdm() {
+		return sjxzqhdm;
+	}
+	public void setSjxzqhdm(String sjxzqhdm) {
+		this.sjxzqhdm = sjxzqhdm;
+	}
+	public Timestamp getCjsj() {
+		return cjsj;
+	}
+	public void setCjsj(Timestamp cjsj) {
+		this.cjsj = cjsj;
+	}
+	public String getCjry() {
+		return cjry;
+	}
+	public void setCjry(String cjry) {
+		this.cjry = cjry;
+	}
+
+
+	public String getSjxzqhmc() {
+		return sjxzqhmc;
+	}
+
+
+	public void setSjxzqhmc(String sjxzqhmc) {
+		this.sjxzqhmc = sjxzqhmc;
+	}
+
+
+	public String getIsChild() {
+		return isChild;
+	}
+
+
+	public void setIsChild(String isChild) {
+		this.isChild = isChild;
+	}
+	
+}
+

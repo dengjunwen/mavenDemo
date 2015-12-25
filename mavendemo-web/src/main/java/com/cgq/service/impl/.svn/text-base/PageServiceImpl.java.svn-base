@@ -1,0 +1,96 @@
+package com.cgq.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cgq.mapper.PageMapper;
+import com.cgq.mapper.ResourceMapper;
+import com.cgq.model.Page;
+import com.cgq.model.Resource;
+import com.cgq.service.PageService;
+import com.cgq.service.PageTaskService;
+import com.cgq.service.ResourceService;
+import com.cgq.util.CheckUtil;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+
+@Service
+@Transactional
+public class PageServiceImpl implements PageService {
+	@Autowired
+	private	PageMapper pageMapper;
+	@Autowired
+	private ResourceService resourceService;
+
+	@Override
+	public void SavePage(Page page) throws Exception {
+		pageMapper.insertSelective(page);
+	}
+
+	@Override
+	public void updatePage() throws Exception {
+		
+	}
+
+	@Override
+	public void queryPageById() {
+		
+	}
+	@Override
+	public List<Page> queryPageByPageid(String pageid) {
+		Example example = new Example(Page.class);
+		Criteria criteria = example.createCriteria().andEqualTo("pageid",pageid);
+		List<Page> pages = pageMapper.selectByExample(example);
+		return CheckUtil.isEmpty(pages)?null:pages ;
+	}
+
+	public List<Page> queryStaticPage(String pageId) {
+		Example example = new Example(Page.class);
+		Criteria criteria = example.createCriteria().andNotEqualTo("status", 0);
+		List<Page> pages = pageMapper.selectByExample(example);
+		return CheckUtil.isEmpty(pages)?null:pages ;
+	}
+
+	@Override
+	public List<Resource> queryResourceByPageId(String pageId, Integer resourceType) {
+		
+		Example pageExample = new Example(Page.class);
+		pageExample.createCriteria().andEqualTo("pageid",pageId);
+		pageExample.setOrderByClause(" sort_index asc");
+		List<Page> pages =  pageMapper.selectByExample(pageExample);
+		return  resourceService.queryResourceByIds(pages, resourceType); 
+	}
+
+	@Override
+	public List<Page> queryPageByPageIdAndResourceId(Integer pageId, Integer resourceId) {
+		Example e = new Example(Page.class);
+		Criteria criteria  = e.createCriteria().andEqualTo("pageid", pageId).andEqualTo("resourceid", resourceId);
+		List<Page> pages = pageMapper.selectByExample(e);
+		return pages;
+		
+	}
+
+	@Override
+	public List<Page> queryStaticPage() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Page> queryPageByPageIdAndType(String pageId, Integer resourceType) {
+		Example pageExample = new Example(Page.class);
+		pageExample.createCriteria().andEqualTo("pageid",pageId);
+		pageExample.setOrderByClause(" sort_index asc");
+		List<Page> pages =  pageMapper.selectByExample(pageExample);
+		return pages;
+	}
+	
+	
+	
+	
+	
+}

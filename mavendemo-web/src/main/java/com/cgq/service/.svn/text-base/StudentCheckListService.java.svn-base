@@ -1,0 +1,38 @@
+package com.cgq.service;
+
+import java.util.Date;
+import java.util.List;
+
+import com.cgq.model.StudentCheckList;
+import com.cgq.model.StudentCheckListDetail;
+
+public interface StudentCheckListService {
+
+	/**
+	 * 按学生ID分页查询
+	 * @param studentCheckList
+	 * @return
+	 */
+	List<StudentCheckList> listByStudentid(StudentCheckList studentCheckList);
+
+	void saveUsedCheckList(String checklistid, String startdate, String enddate, String studentid);
+
+	void saveNewCheckList(String[] contentArr,String[] starttimerArr,String[] endtimeArr, String startdate, String enddate, String studentid);
+
+	/**
+	 * 查询学生下周清单
+	 * @param studentid
+	 * @return
+	 * @throws Exception 
+	 */
+	StudentCheckList listStudentNextWeekCheckList(String studentid) throws Exception;
+
+	StudentCheckList listStudentCurrentWeekCheckList(String studentid);
+
+	void doneCheckListDetail(Integer checkListDetailId, Date date, Integer studentid);
+
+	StudentCheckListDetail queryCheckListDeatailById(String detailid);
+
+	void updateCheckListDetail(Integer id, String content, String starttime, String endtime);
+
+}

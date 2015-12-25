@@ -1,0 +1,90 @@
+package com.cgq.model;
+
+import static javax.persistence.GenerationType.IDENTITY;
+
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+@Entity
+@Table(name = "t_student_checklist", catalog = "xschool")
+public class StudentCheckList implements java.io.Serializable {
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	@Column(name = "studentid")
+	private Integer studentid;
+	@Column(name = "start_date")
+	private String startDate;
+	@Column(name = "end_date")
+	private String endDate;
+	@Transient
+	private List<StudentCheckListDetail> studentCheckListDetails;
+	@Transient
+	private Integer start;
+	@Transient
+	private Integer size;
+	
+	public Integer getStart() {
+		return start;
+	}
+
+	public void setStart(Integer start) {
+		this.start = start;
+	}
+
+	public Integer getSize() {
+		return size;
+	}
+
+	public void setSize(Integer size) {
+		this.size = size;
+	}
+
+	public List<StudentCheckListDetail> getStudentCheckListDetails() {
+		return studentCheckListDetails;
+	}
+
+	public void setStudentCheckListDetails(List<StudentCheckListDetail> studentCheckListDetails) {
+		this.studentCheckListDetails = studentCheckListDetails;
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getStudentid() {
+		return studentid;
+	}
+
+	public void setStudentid(Integer studentid) {
+		this.studentid = studentid;
+	}
+
+	public String getStartDate() {
+		return startDate;
+	}
+
+	public void setStartDate(String startDate) {
+		this.startDate = startDate;
+	}
+
+	public String getEndDate() {
+		return endDate;
+	}
+
+	public void setEndDate(String endDate) {
+		this.endDate = endDate;
+	}
+
+}

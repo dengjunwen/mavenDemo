@@ -1,0 +1,89 @@
+package com.cgq.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.cgq.model.StudentTaskPhoto;
+import com.cgq.model.StudentTaskScore;
+import com.cgq.service.ResourceService;
+import com.cgq.service.StudentTaskPhotoService;
+import com.cgq.service.StudentTaskScoreService;
+import com.cgq.util.FileSaveUtil;
+
+/**
+ * 学生任务评分控制类
+ * @author wangjie
+ *
+ */
+@RequestMapping("/manage/studentTaskScore")
+@Controller
+public class StudentTaskScoreController {
+	Logger log = LoggerFactory.getLogger(StudentTaskScoreController.class);
+	
+	@Autowired
+	private StudentTaskScoreService studentTaskScoreService;
+	
+	@Autowired
+	private StudentTaskPhotoService studentTaskPhotoService;
+	
+	@Autowired
+	private ResourceService resouceService;
+	
+	/**
+	 * 跳转列表页面
+	 * @return
+	 */
+	@RequestMapping("/list")
+	public String list(){
+		return "studentTaskScore/list";
+	}
+	
+	/**
+	 * 查询学生任务历史关联评分记录
+	 * @return
+	 */
+	@RequestMapping("/listStudentTaskHistory")
+	@ResponseBody
+	public List<StudentTaskScore> listStudentTaskHistory(){
+		return studentTaskScoreService.listStudentTaskHistory();
+	}
+	
+	/**
+	 * 查询学生任务历史关联的照片URL
+	 * @return
+	 */
+	@RequestMapping("/listStudentTaskPhoto")
+	@ResponseBody
+	public List<String> listStudentTaskPhoto(Integer studentId,Integer taskId){
+		List<StudentTaskPhoto> result = studentTaskPhotoService.queryStudentTaskPhotoByTaskAndStudent(taskId, studentId);
+		List<String> resourceurls = new ArrayList<String>();
+		for(StudentTaskPhoto studentTaskPhoto : result){
+			resourceurls.add(studentTaskPhoto.getResource().getUrl());
+		}
+		return resourceurls;
+	}
+	
+	/**
+	 * 保存学生评分
+	 * @return
+	 */
+	@RequestMapping("/saveStudentScore")
+	@ResponseBody
+	public String saveStudentScore(StudentTaskScore studentTaskScore){
+		int result = studentTaskScoreService.updateStudentScoreByStudentidAndTaskid(studentTaskScore);
+		if(result <1){
+			studentTaskScoreService.saveStudentScore(studentTaskScore);
+		}
+		return "success";
+	}
+	
+}

@@ -1,0 +1,9 @@
+package com.cgq.mapper;
+
+import com.cgq.model.StudentCheckListDetail;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface StudentCheckListDetailMapper extends Mapper<StudentCheckListDetail> {
+
+}

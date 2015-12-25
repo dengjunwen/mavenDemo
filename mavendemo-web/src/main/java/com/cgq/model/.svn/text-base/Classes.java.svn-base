@@ -1,0 +1,105 @@
+package com.cgq.model;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+/**
+ * Class entity. @author MyEclipse Persistence Tools
+ */
+@Entity
+@Table(name = "t_class", catalog = "xschool")
+public class Classes implements java.io.Serializable {
+
+	// Fields
+	@Id
+	@Column(name = "id", unique = true, nullable = false)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
+	@Column(name = "class_name", length = 45)
+	private String className;
+	@Column(name = "class_level", length = 45)
+	private String classLevel;
+	@Column(name = "company_teacher_id", length = 11)
+	private Integer companyTeacherId;
+	@Column(name = "company_teacher_name", length = 45)
+	private String companyTeacherName;
+	@Column(name = "total_student")
+	private Integer totalStudent;
+
+	// Constructors
+
+	/** default constructor */
+	public Classes() {
+	}
+
+	/** minimal constructor */
+	public Classes(Integer id) {
+		this.id = id;
+	}
+
+	/** full constructor */
+	public Classes(Integer id, String className, String classLevel,
+			Integer companyTeacherId, String companyTeacherName,
+			Integer totalStudent) {
+		this.id = id;
+		this.className = className;
+		this.classLevel = classLevel;
+		this.companyTeacherId = companyTeacherId;
+		this.companyTeacherName = companyTeacherName;
+		this.totalStudent = totalStudent;
+	}
+
+	// Property accessors
+	public Integer getId() {
+		return this.id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public String getClassName() {
+		return this.className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	public String getClassLevel() {
+		return this.classLevel;
+	}
+
+	public void setClassLevel(String classLevel) {
+		this.classLevel = classLevel;
+	}
+
+	public Integer getCompanyTeacherId() {
+		return this.companyTeacherId;
+	}
+
+	public void setCompanyTeacherId(Integer companyTeacherId) {
+		this.companyTeacherId = companyTeacherId;
+	}
+
+	public String getCompanyTeacherName() {
+		return this.companyTeacherName;
+	}
+
+	public void setCompanyTeacherName(String companyTeacherName) {
+		this.companyTeacherName = companyTeacherName;
+	}
+
+	public Integer getTotalStudent() {
+		return this.totalStudent;
+	}
+
+	public void setTotalStudent(Integer totalStudent) {
+		this.totalStudent = totalStudent;
+	}
+
+}

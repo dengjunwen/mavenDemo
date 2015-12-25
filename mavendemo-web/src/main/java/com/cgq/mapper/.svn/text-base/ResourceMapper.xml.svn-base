@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cgq.mapper.ResourceMapper" >
+ 
+ 
+ 
+ 	<select id="selectById" resultType="Resource" parameterType="Integer">
+ 		
+ 		SELECT id,source,creattime,type,url  FROM t_resource WHERE id = #{id}
+ 	
+ 	</select>
+ 	
+ 	<select id="queryList" resultType="Resource">
+ 		SELECT id,source,creattime,type,url FROM t_resource ORDER BY ID DESC
+ 	</select>
+ 	
+ 	<select id="queryResource" resultType="Resource" parameterType="map">
+ 		SELECT id,source,creattime,type,url FROM t_resource where 1=1 
+ 		<if test="id !=null"> and id = #{id}</if>
+ 		<if test="source !=null "> and source = ${source}</if>
+ 		<if test="type !=null"> and type = ${type}</if>
+ 		order by id desc
+ 	</select>
+ 	
+</mapper>

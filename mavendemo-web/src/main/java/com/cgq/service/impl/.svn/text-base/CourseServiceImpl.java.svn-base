@@ -1,0 +1,225 @@
+package com.cgq.service.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.cgq.mapper.CourseMapper;
+import com.cgq.mapper.StudentClassMapper;
+import com.cgq.mapper.TaskMapper;
+import com.cgq.mapper.TeacherMapper;
+import com.cgq.model.Classes;
+import com.cgq.model.Course;
+import com.cgq.model.Student;
+import com.cgq.model.StudentClass;
+import com.cgq.model.Task;
+import com.cgq.model.Teacher;
+import com.cgq.service.ClassesService;
+import com.cgq.service.CourseService;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.ResultCode;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+
+@Service
+public class CourseServiceImpl implements CourseService {
+
+	@Autowired
+	private CourseMapper courseMapper;
+	
+	@Autowired
+	private TeacherMapper teacherMapper;
+	
+	@Autowired
+	private TaskMapper taskMapper;
+	
+	@Autowired
+	private ClassesService classesService;
+
+	@Autowired
+	StudentClassMapper studentClassMapper;
+	
+	@Override
+	public Course getUserCurrentTask(int userid, Integer usertype) {
+		// TODO Auto-generated method stub
+		if (usertype == 0) //学生
+			return courseMapper.getStudentCurrentTask(userid);
+		if (usertype == 1) //老师
+			return courseMapper.getTeacherCurrentTask(userid);
+		else return new Course();
+	}
+
+	@Override
+	public Set<Integer> getStudentIdStrByCousrid(String courseid) {
+		// TODO Auto-generated method stub
+		Example courseExample = new Example(Course.class);
+		courseExample.createCriteria().andEqualTo("courseId", courseid);
+		Course course = courseMapper.selectByExample(courseExample).get(0);
+		Set<Integer> studentids = new HashSet<Integer>();
+		Example studentClassExample = new Example(StudentClass.class);
+		studentClassExample.createCriteria().andEqualTo("classId", course.getClassid()).andEqualTo("status", "0");
+		List<StudentClass> studentClasses = studentClassMapper.selectByExample(studentClassExample);
+		for(StudentClass studentClasss : studentClasses){
+			studentids.add(studentClasss.getStudentId());
+		}
+		return studentids;
+	}
+
+	@Override
+	public int addCourse(String classid, String date, String taskid, String teacherid, String coursename,
+			String endtime, String starttime) {
+		// TODO Auto-generated method stub
+		int result = 0;
+		String courseID = UUID.randomUUID().toString();
+		endtime  = date+" "+endtime+":00";
+		starttime = date + " "+starttime+":00";
+		Course course = new Course();
+		course.setClassid(Integer.valueOf(classid));
+		course.setEndTime(endtime);
+		course.setBeginTime(starttime);
+		course.setTaskId(Integer.valueOf(taskid));
+		course.setCourseId(courseID);
+		if(CheckUtil.isEmpty(coursename)) {
+			Task task = taskMapper.selectByPrimaryKey(taskid);
+			coursename  = task.getTaskName();
+		}
+		course.setCourseName(coursename);
+		course.setTeacherId(Integer.valueOf(teacherid));
+		course.setStatus("0");
+		result += courseMapper.insert(course);
+		return result;
+	}
+
+	@Override
+	public List<Course> listCourseByClassid(String classid) {
+		// TODO Auto-generated method stub
+		Example record = new Example(Course.class);
+		Criteria criteria = record.createCriteria();
+		criteria.andEqualTo("classid", Integer.valueOf(classid));
+		return courseMapper.selectByExample(record);
+	}
+	
+	public List<Course> listCourseByClassid(Integer classid) {
+		Example record = new Example(Course.class);
+		record.setDistinct(true);
+		record.selectProperties("courseName");
+		record.selectProperties("taskId");
+		record.selectProperties("classid");
+		Criteria criteria = record.createCriteria();
+		criteria.andEqualTo("classid", classid);
+		return courseMapper.selectByExample(record);
+	}
+	
+	@Override
+	public String listCourseCalendarJSONByClassid(String classid) {
+		// TODO Auto-generated method stub
+		List<Course> courselist = listCourseByClassid(classid);
+		List<Map> result = new ArrayList<Map>();
+		//课程去重
+		Set<String> courseidset = new HashSet<String>();
+		for(Course course: courselist){
+			String courseid = course.getCourseId();
+			if(courseidset.contains(courseid))continue;
+			courseidset.add(courseid);
+			Map map = new HashMap();
+			map.put("id", courseid);
+			String title =  course.getCourseName()+" "+course.getBeginTime().substring(11, 16)+"至"+course.getEndTime().substring(11, 16);
+			Teacher teacher = teacherMapper.selectByPrimaryKey(course.getTeacherId());
+			title += "  "+teacher.getEnglishName();
+			map.put("title",title);
+			if(course.getStatus().equals("1"))map.put("color","grey");
+			map.put("start", course.getBeginTime());
+			map.put("end", course.getEndTime());
+			map.put("allDay", "false");
+			result.add(map);
+			//如果没开始上课 则允许删除课程
+			if(course.getStatus().equals("0")){
+				Map del_map = new HashMap();
+				del_map.put("title", "删除"+course.getCourseName()+"课程安排");
+				del_map.put("id", courseid+"_del");
+				del_map.put("start", course.getBeginTime());
+				del_map.put("color","red");
+				del_map.put("url","/cgq//manage/course/delcourse?classid="+classid+"&courseid="+courseid);
+				result.add(del_map);
+			}
+		}
+		return JSON.toJSONString(result);
+	}
+
+	@Override
+	public int delcourse(String classid, String courseid) {
+		// TODO Auto-generated method stub
+		Example record = new Example(Course.class);
+		Criteria criteria = record.createCriteria();
+		criteria.andEqualTo("courseId", courseid);
+		//只能删除没开始上课的课程
+		criteria.andEqualTo("status", "0");
+		return courseMapper.deleteByExample(record);
+	}
+
+	@Override
+	public Task getTaskByCourseid(String courseid) {
+		Example record = new Example(Course.class);
+		Criteria criteria = record.createCriteria();
+		criteria.andEqualTo("courseId", courseid);
+		List<Course> result = courseMapper.selectByExample(record);
+		Integer taskid = null;
+		for(Course course : result){
+			taskid = course.getTaskId();
+			if(taskid!=null)break;
+		}
+		return taskMapper.selectByPrimaryKey(taskid);
+	}
+
+	@Override
+	public List<Course> getListCourse(Integer teacherId, Integer userType) {
+		Example record = new Example(Course.class);
+		Criteria criteria = record.createCriteria();
+		List<Course> course = null;
+		if(userType == ResultCode.USER_TYPE_TEACHER){
+			// 陪伴老师，获取陪伴的班级的课程
+			// 1 .获取班级 getClass
+			Classes classes = 	classesService.querytByTeacherId(teacherId);
+			if(CheckUtil.notEmpty(classes)){
+				Integer classId = classes.getId();
+				//获取班级下的课程
+				course = listCourseByClassid(classId);
+			}
+		}
+		if(userType == ResultCode.USER_TYPE_FOREIGN_TEACHER){
+			//外教课程
+			Example e = new Example(Course.class);
+			e.setDistinct(true);
+			e.selectProperties("courseName");
+			e.selectProperties("taskId");
+			e.selectProperties("classid");
+			e.createCriteria().andEqualTo("teacherId",teacherId);
+			course = courseMapper.selectByExample(e);
+		}
+		return course;
+	}
+
+	@Override
+	public List<Course> getCourseByStudentId(Integer studentId) {
+		Example studentClassExample = new Example(StudentClass.class);
+		studentClassExample.createCriteria().andEqualTo("studentId",studentId).andEqualTo("status", "0");
+		List<StudentClass> studentClasses = studentClassMapper.selectByExample(studentClassExample);
+		if(studentClasses.size()<1) return null;
+		Integer classid = studentClasses.get(0).getClassId();
+		Example e = new Example(Course.class);
+		e.createCriteria().andEqualTo("classid",classid);
+		List<Course> courses = courseMapper.selectByExample(e);
+		return courses;
+	}
+
+}

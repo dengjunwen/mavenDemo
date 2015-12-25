@@ -1,0 +1,217 @@
+package com.cgq.model;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import static javax.persistence.GenerationType.IDENTITY;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+/**
+ * Teacher entity. @author MyEclipse Persistence Tools
+ */
+@Entity
+@Table(name = "t_teacher", catalog = "xschool")
+public class Teacher implements java.io.Serializable {
+
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Integer id;
+	private String nickName;
+	private String englishName;
+	private Integer sex;
+	private Integer age;
+	private Integer areaId;
+	private String areaName;
+	private Integer type;
+	private String typeName;
+	private String memo1;
+	private String memo2;//生日
+	private String status;
+	private String telephone;
+	private String address;
+	private String email;
+	private String password;
+	@Column(name="picture_url")
+	private String pictureUrl;
+	
+
+	// Constructors
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	/** default constructor */
+	public Teacher() {
+	}
+
+	/** full constructor */
+	public Teacher(String nickName, String englishName, Integer sex,
+			Integer age, Integer areaId, String areaName, Integer type,
+			String typeName, String memo1, String memo2, String status,
+			String telephone, String address, String email) {
+		this.nickName = nickName;
+		this.englishName = englishName;
+		this.sex = sex;
+		this.age = age;
+		this.areaId = areaId;
+		this.areaName = areaName;
+		this.type = type;
+		this.typeName = typeName;
+		this.memo1 = memo1;
+		this.memo2 = memo2;
+		this.status = status;
+		this.telephone = telephone;
+		this.address = address;
+		this.email = email;
+	}
+	
+	public Integer getId() {
+		return this.id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	@Column(name = "nick_name", length = 45)
+	public String getNickName() {
+		return this.nickName;
+	}
+
+	public void setNickName(String nickName) {
+		this.nickName = nickName;
+	}
+
+	@Column(name = "english_name", length = 45)
+	public String getEnglishName() {
+		return this.englishName;
+	}
+
+	public void setEnglishName(String englishName) {
+		this.englishName = englishName;
+	}
+
+	@Column(name = "sex", length = 1)
+	public Integer getSex() {
+		return this.sex;
+	}
+
+	public void setSex(Integer sex) {
+		this.sex = sex;
+	}
+
+	@Column(name = "age")
+	public Integer getAge() {
+		return this.age;
+	}
+
+	public void setAge(Integer age) {
+		this.age = age;
+	}
+
+	@Column(name = "area_id")
+	public Integer getAreaId() {
+		return this.areaId;
+	}
+
+	public void setAreaId(Integer areaId) {
+		this.areaId = areaId;
+	}
+
+	@Column(name = "area_name", length = 45)
+	public String getAreaName() {
+		return this.areaName;
+	}
+
+	public void setAreaName(String areaName) {
+		this.areaName = areaName;
+	}
+
+	@Column(name = "type")
+	public Integer getType() {
+		return this.type;
+	}
+
+	public void setType(Integer type) {
+		this.type = type;
+	}
+
+	@Column(name = "type_name", length = 45)
+	public String getTypeName() {
+		return this.typeName;
+	}
+
+	public void setTypeName(String typeName) {
+		this.typeName = typeName;
+	}
+
+	@Column(name = "memo1", length = 45)
+	public String getMemo1() {
+		return this.memo1;
+	}
+
+	public void setMemo1(String memo1) {
+		this.memo1 = memo1;
+	}
+
+	@Column(name = "memo2", length = 45)
+	public String getMemo2() {
+		return this.memo2;
+	}
+
+	public void setMemo2(String memo2) {
+		this.memo2 = memo2;
+	}
+
+	@Column(name = "status", length = 1)
+	public String getStatus() {
+		return this.status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	@Column(name = "telephone", length = 45)
+	public String getTelephone() {
+		return this.telephone;
+	}
+
+	public void setTelephone(String telephone) {
+		this.telephone = telephone;
+	}
+
+	@Column(name = "address", length = 45)
+	public String getAddress() {
+		return this.address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	@Column(name = "email", length = 45)
+	public String getEmail() {
+		return this.email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getPictureUrl() {
+		return pictureUrl;
+	}
+
+	public void setPictureUrl(String pictureUrl) {
+		this.pictureUrl = pictureUrl;
+	}
+	
+	
+}

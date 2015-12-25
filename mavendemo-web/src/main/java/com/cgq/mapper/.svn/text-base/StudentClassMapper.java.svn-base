@@ -1,0 +1,10 @@
+package com.cgq.mapper;
+
+import com.cgq.model.StudentClass;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface StudentClassMapper  extends Mapper<StudentClass> {
+	
+}
+

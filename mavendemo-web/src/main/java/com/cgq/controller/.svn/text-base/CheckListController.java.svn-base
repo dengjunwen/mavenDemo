@@ -1,0 +1,103 @@
+package com.cgq.controller;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.cgq.model.StudentCheckList;
+import com.cgq.service.StudentCheckListService;
+
+@Controller
+@RequestMapping("/check")
+public class CheckListController {
+
+	Logger LOG = LoggerFactory.getLogger(CheckListController.class);
+
+	@Autowired
+	private StudentCheckListService studentCheckListService;
+	
+	@RequestMapping("/listbystudentid")
+	@ResponseBody
+	public List<StudentCheckList> listCheckListByStudentid(StudentCheckList studentCheckList,
+			HttpServletRequest request) {
+		Integer studentid = (Integer) request.getSession().getAttribute("studentId");
+		// studentid = "1";
+		studentCheckList.setStudentid(Integer.valueOf(studentid));
+		return studentCheckListService.listByStudentid(studentCheckList);
+	}
+
+	@RequestMapping("/saveusedchecklist")
+	public String saveUsedChecklist(String checklistid, String startdate, String enddate, HttpServletRequest request) {
+		try {
+			Integer studentid = (Integer) request.getSession().getAttribute("studentId");
+			// studentid = "1";
+			studentCheckListService.saveUsedCheckList(checklistid, startdate, enddate, studentid.toString());
+			return "mobile/checklist/checklistSaveSuccessInfo";
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return "mobile/checklist/checklistSaveErrorInfo";
+		}
+	}
+
+	@RequestMapping("/doneCheckListDetail")
+	@ResponseBody
+	public String doneCheckListDetail(Integer checkListDetailId, HttpServletRequest request) {
+		try {
+			Integer studentid = (Integer) request.getSession().getAttribute("studentId");
+			studentCheckListService.doneCheckListDetail(checkListDetailId, new Date(), studentid);
+			return "success";
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return "fail";
+		}
+	}
+
+	@RequestMapping("/updateCheckListDetail")
+	@ResponseBody
+	public String updateCheckListDetail(Integer id,String content,String starthour,String endhour){
+		try {
+			//本地测试时打开注解防止乱码
+			//studentCheckListService.updateCheckListDetail(id, new String(content.getBytes("ISO-8859-1"),"utf-8"),starthour+":00:00",endhour+":00:00");
+			studentCheckListService.updateCheckListDetail(id, content,starthour+":00:00",endhour+":00:00");
+			return "success";
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		return "fail";
+	}
+	
+	@RequestMapping("/queryCheckListDeatailById")
+	@ResponseBody
+	public Object queryCheckListDeatailById(String detailid){
+		return studentCheckListService.queryCheckListDeatailById(detailid);
+	}
+	
+	@RequestMapping("/savenewchecklist")
+	public String saveNewChecklist(String num, String content, String startdate, String enddate, String starttime,
+			String endtime, HttpServletRequest request) {
+		try {
+			Integer studentid = (Integer) request.getSession().getAttribute("studentId");
+			// studentid = "1";
+			String[] contentArr = content.split(",");
+			String[] starttimeArr = starttime.split(",");
+			String[] endtimeArr = endtime.split(",");
+			studentCheckListService.saveNewCheckList(contentArr, starttimeArr,endtimeArr,startdate, enddate, studentid.toString());
+			return "mobile/checklist/checklistSaveSuccessInfo";
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return "mobile/checklist/checklistSaveErrorInfo";
+		}
+	}
+}

@@ -1,0 +1,16 @@
+package com.cgq.mapper;
+
+import java.util.List;
+
+import com.cgq.model.Page;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface PageMapper extends Mapper<Page>{
+	
+	public Page selectById(Integer id);
+	
+	public List<Page> queryList();
+	
+	public List<Page> queryListByTaskid(Integer taskid);
+}

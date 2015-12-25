@@ -1,0 +1,32 @@
+package com.cgq.service;
+
+import java.util.List;
+
+import com.cgq.model.Student;
+
+public interface StudentService {
+	
+	
+	public int addStudent(Student student) throws Exception;
+
+	public int updateStudent(Student student) throws Exception;
+	
+	public int deleteStudent(Integer id) throws Exception;
+	
+	public List<Student> queryListStudent(Integer pageNo,Integer pageSize);
+
+	public List<Student> queryAll();
+
+	public List<Student> listStudentsNoClass();
+	
+	public Student queryStudentByMolie(String mobile);
+	
+	public Student queryStudentById(Integer id);
+	
+	
+	public List<Student> queryStudentByTaskIdAndCourseId(Integer taskid, Integer classId);
+
+	public List<Student> queryStudentByName(String studentName);
+	
+	public List<Student> queryClassMatesExceptMe(Integer userid); 
+}

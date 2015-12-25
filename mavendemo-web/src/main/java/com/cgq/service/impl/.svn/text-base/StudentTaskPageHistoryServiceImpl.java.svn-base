@@ -1,0 +1,61 @@
+package com.cgq.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cgq.mapper.StudentTaskPageHistoryMapper;
+import com.cgq.model.StudentTaskPageHistory;
+import com.cgq.service.StudentTaskPageHistoryService;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.ResultCode;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+@Service
+public class StudentTaskPageHistoryServiceImpl implements StudentTaskPageHistoryService {
+
+	@Autowired
+	private StudentTaskPageHistoryMapper studentTaskPageHistoryMapper;
+	
+	@Override
+	public List<StudentTaskPageHistory> getResourceIdByStudentAndPageId(Integer studentId,Integer index, Integer taskId) {
+		Example e = new Example(StudentTaskPageHistory.class);
+		Criteria criteria = e.createCriteria()
+				.andEqualTo("taskId",taskId)
+				.andEqualTo("studentId",studentId)
+				.andEqualTo("pageIndex",index)
+				.andNotEqualTo("taskType", ResultCode.TASK_TYPE_NO_TASK);
+		e.setOrderByClause("sort_index asc ");
+		List<StudentTaskPageHistory>  list = 	studentTaskPageHistoryMapper.selectByExample(e);
+		return list;
+	}
+
+	@Override
+	public int insert(StudentTaskPageHistory studentTaskPageHistory) throws Exception{
+		Example e = new Example(StudentTaskPageHistory.class);
+		Criteria criteria = e.createCriteria();
+		criteria.andEqualTo("pageIndex",studentTaskPageHistory.getPageIndex())
+		.andEqualTo("studentId", studentTaskPageHistory.getStudentId())
+		.andEqualTo("taskId", studentTaskPageHistory.getTaskId());
+		if(CheckUtil.notEmpty( studentTaskPageHistory.getSortIndex())){
+			criteria.andEqualTo("sortIndex", studentTaskPageHistory.getSortIndex());
+		}
+		
+		List<StudentTaskPageHistory> oldHistory = studentTaskPageHistoryMapper.selectByExample(e);
+		if(CheckUtil.notEmpty(oldHistory)&&oldHistory.size()!=0){
+			//更新history操作
+			studentTaskPageHistory.setId(oldHistory.get(0).getId());
+			return 	studentTaskPageHistoryMapper.updateByPrimaryKeySelective(studentTaskPageHistory);
+		}
+		return studentTaskPageHistoryMapper.insertSelective(studentTaskPageHistory);
+	}
+
+	@Override
+	public int update(StudentTaskPageHistory studentTaskPageHistory) throws Exception {
+		
+		return studentTaskPageHistoryMapper.updateByPrimaryKeySelective(studentTaskPageHistory);
+	}
+
+}

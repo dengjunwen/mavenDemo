@@ -1,0 +1,42 @@
+package com.cgq.service.impl;
+
+import java.util.List;
+import java.util.ResourceBundle;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cgq.mapper.StudentTaskPhotoMapper;
+import com.cgq.model.Resource;
+import com.cgq.model.StudentTaskPhoto;
+import com.cgq.service.ResourceService;
+import com.cgq.service.StudentTaskPhotoService;
+import com.cgq.util.CheckUtil;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+@Service
+public class StudentTaskPhotoServiceImpl implements StudentTaskPhotoService {
+	@Autowired
+	private StudentTaskPhotoMapper studentTaskPhotoMapper;
+	@Autowired
+	private ResourceService resourceService;
+	
+
+	@Override
+	public List<StudentTaskPhoto> queryStudentTaskPhotoByTaskAndStudent(Integer taskId, Integer studentId) {
+		Example e = new Example(StudentTaskPhoto.class);
+		Criteria criteria = e.createCriteria().andEqualTo("taskId",taskId).andEqualTo("studentId",studentId);
+		List<StudentTaskPhoto> list = studentTaskPhotoMapper.selectByExample(e);
+		for(StudentTaskPhoto stp:list){
+			if(CheckUtil.notEmpty(stp.getResourceId())){
+				Resource resource = resourceService.getResourceById(stp.getResourceId());
+				ResourceBundle bundle = ResourceBundle.getBundle("sysconf");
+				resource.setUrl(bundle.getString("FileServerLocation")+resource.getUrl());
+				stp.setResource(resource);
+			}
+		}
+		return list;
+	}
+	
+}

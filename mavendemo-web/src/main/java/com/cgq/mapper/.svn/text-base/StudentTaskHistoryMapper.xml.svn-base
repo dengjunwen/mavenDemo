@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cgq.mapper.StudentTaskHistoryMapper">
+	<select id="listAll" resultType="StudentTaskHistory">
+		SELECT 
+    id,
+    page_index pageIndex,
+    updatetime,
+    t_task_id TTaskId,
+    status,
+    t_student_id studentId,
+    task_type taskType,
+    (select nick_name from t_student where id = a.t_student_id) studentNickName,
+    (select telephone from t_student where id = a.t_student_id) sudentTelephone,
+    (select taskname from t_task where id = a.t_task_id) taskName
+FROM
+    xschool.t_student_task_history a  order by updatetime desc
+	</select>
+	
+</mapper>

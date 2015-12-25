@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cgq.mapper.PageMapper" >
+ 
+ 	<select id="queryListByTaskid" resultType="Page">
+ 		SELECT a.id id,a.pageid pageid,a.pagename pagename,a.status,a.resourceid resourceid,b.page_index pageindex FROM t_page a right  join t_page_task b on a.pageid = b.t_page_id  WHERE b. t_task_id = #{id}  
+ 		order by  b.page_index ASC 
+ 	</select>
+ 	
+</mapper>

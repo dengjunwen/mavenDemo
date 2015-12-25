@@ -1,0 +1,23 @@
+package com.cgq.mapper;
+
+import com.cgq.model.Course;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface CourseMapper extends Mapper<Course>{
+	
+	/**
+	 * 获取结束时间在当前时间之后且开始时间最早的课程
+	 * @param userid
+	 * @return
+	 */
+	public Course getStudentCurrentTask(int userid);
+
+	/**
+	 * 获取结束时间在当前时间之后且开始时间最早的课程
+	 * @param userid
+	 * @return
+	 */
+	public Course getTeacherCurrentTask(int userid);
+
+}

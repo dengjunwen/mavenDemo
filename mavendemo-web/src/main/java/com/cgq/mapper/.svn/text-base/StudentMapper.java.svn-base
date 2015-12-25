@@ -1,0 +1,13 @@
+package com.cgq.mapper;
+
+import java.util.List;
+
+import com.cgq.model.Student;
+
+import tk.mybatis.mapper.common.Mapper;
+
+public interface StudentMapper extends Mapper<Student> {
+	public List<Student> listStudentsByClassId(Integer classid);
+
+	public List<Student> listStudentsNoClass();
+}

@@ -1,0 +1,158 @@
+package com.cgq.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.cgq.model.Student;
+import com.cgq.service.StudentService;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.ResultCode;
+import com.google.common.collect.Maps;
+
+/**
+ * @author zhangbin1
+ *	学生信息基本管理
+ */
+@RequestMapping("/manage/student")
+@Controller
+public class StudentManageController {
+	
+	Logger log = LoggerFactory.getLogger(StudentManageController.class);
+	
+	@Autowired
+	private StudentService studentService;
+	
+	/**
+	 * 保存学生信息。新增或者修改
+	 * @param student
+	 * @return
+	 */
+	@RequestMapping("/save")
+	@ResponseBody
+	public  Map<String,Object> saveStudent(Student student){
+		if(student.getId() != null) return updateStudent(student);
+		return addStudent(student);
+	}
+	
+	/** 新增学生
+	 * @param student
+	 * @return
+	 */
+	@RequestMapping("/add")
+	@ResponseBody
+	public Map<String,Object> addStudent(Student student){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			studentService.addStudent(student);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("新增学生失败   StudentManageController  addStudent"+e);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		}
+		return data;
+	}
+	
+	/** 修改学生
+	 * @param student
+	 * @return
+	 */
+	@RequestMapping("/update")
+	@ResponseBody
+	public Map<String,Object> updateStudent(Student user){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			Student userOld = studentService.queryStudentById(user.getId());
+			userOld.setNickName(user.getNickName());
+			userOld.setMemo1(user.getMemo1());
+			userOld.setEnglishName(user.getEnglishName());
+			userOld.setSex(user.getSex());
+			userOld.setAge(user.getAge());
+			userOld.setAddress(user.getAddress());
+			userOld.setTelephone(user.getTelephone());
+			studentService.updateStudent(userOld);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			log.error("修改学生信息失败   StudentManageController  updateStudent"+e);
+			data.put("code", ResultCode.RESULT_CODE_ERROR);
+			data.put("msg", ResultCode.RESULT_CODE_ERROR_MSG);
+		}
+		return data;
+	}
+	
+	/**
+	 * 根据学生ID查询学生
+	 * @param studentid
+	 * @return
+	 */
+	@RequestMapping("/queryById")
+	@ResponseBody
+	public Student queryById(String studentid){
+		return studentService.queryStudentById(Integer.valueOf(studentid));
+	}
+	
+	/** 查询学生
+	 * @param student
+	 * @return
+	 */
+	@RequestMapping("/query")
+	@ResponseBody
+	public List<Student> queryStudentList(Student student){
+		
+		return studentService.queryAll() ;
+	}
+	
+	/**
+	 * 查询没有分班的学生列表
+	 * @return
+	 */
+	@RequestMapping("/listStudentsNoClass")
+	@ResponseBody
+	public List<Student> listStudentsNoClass(){
+		return studentService.listStudentsNoClass() ;
+	}
+	
+	/** 删除学生
+	 * @param student
+	 * @return
+	 */
+	@RequestMapping("/delete/{id}")
+	@ResponseBody
+	public Map<String,Object> deleteStudent(@PathVariable(value="id")Integer id){
+		Map<String,Object> data = Maps.newHashMap();
+		try {
+			studentService.deleteStudent(id);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("删除学生失败   StudentManageController  deleteStudent"+e);
+			data.put("code", ResultCode.RESULT_CODE_SUCCESS);
+			data.put("msg", ResultCode.RESULT_CODE_SUCCESS_MSG);
+		}
+		return data;
+	}
+	
+	
+	/**
+	 * 获取学生列表页面
+	 * @return
+	 */
+	@RequestMapping("/list")
+	public String getStudentListView(){
+		return "student/list";
+	}
+}

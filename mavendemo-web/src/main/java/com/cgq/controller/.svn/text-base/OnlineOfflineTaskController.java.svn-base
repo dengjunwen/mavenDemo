@@ -1,0 +1,59 @@
+package com.cgq.controller;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.common.collect.Maps;
+
+                                               
+/**
+ * @author zhangbin1
+ *	
+ *	在线任务/离线任务/终极挑战
+ *
+ */
+@Controller
+public class OnlineOfflineTaskController {
+	
+	Logger LOG = LoggerFactory.getLogger(OnlineOfflineTaskController.class);
+
+
+
+	
+	/**
+	 * 
+	 * http://101.200.203.125:8080/cgq/online/taskId /1/index/1/userid/1?usetime=100&isAnswer=1&timeout=1
+	 * @return
+	 */
+	@RequestMapping("/online/taskId/{taskId}/index/{index}")
+	@ResponseBody
+	public Map<String,Object> getOnlineTaskPage(@PathVariable("taskId")Integer taskId,@PathVariable("index") Integer index,
+				Integer isAnswer,Integer usertime,Integer timeout){
+				Map<String,Object> data = Maps.newHashMap();
+				/**
+				 *   read 操作    获取业务资源 service   获取资源
+				 */
+				//TODO  1.获取任务详情。  
+				
+				//TODO  2.根据任务id， index 获取要展示的页面page详情。
+				
+				//TODO  3.根据page详情，去获取。
+				
+				/**
+				 *  write 操作，把有操作的 service	资源与服务器交互
+				 */
+				
+				
+				return data;
+	}
+
+
+}

@@ -1,0 +1,53 @@
+package com.cgq.model;
+
+import java.util.Set;
+
+public class LiveCourse {
+
+	private Set<StudentLive> studentSet;
+	
+	private Set<Group>  groupSet;
+	
+	private String coursewareurl;
+	
+	private Meetingroom meetingroom;
+	
+	
+	
+	
+	public void setStudentSet(Set<StudentLive> studentSet) {
+		this.studentSet = studentSet;
+	}
+
+	public void setGroupSet(Set<Group> groupSet) {
+		this.groupSet = groupSet;
+	}
+
+	public void setCoursewareurl(String coursewareurl) {
+		this.coursewareurl = coursewareurl;
+	}
+
+	public void setMeetingroom(Meetingroom meetingroom) {
+		this.meetingroom = meetingroom;
+	}
+
+	public Meetingroom getMeetingroom() {
+		return this.meetingroom;
+	}
+
+	public String getCoursewareurl() {
+		return this.coursewareurl;
+	}
+
+	public Set<StudentLive> getStudentSet() {
+		// TODO Auto-generated method stub
+		return this.studentSet;
+	}
+
+	public Set<Group> getGroupSet() {
+		// TODO Auto-generated method stub
+		return this.groupSet;
+	}
+
+
+}

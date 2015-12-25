@@ -1,0 +1,174 @@
+package com.cgq.service.impl;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.jpedal.exception.PdfException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.cgq.mapper.PageMapper;
+import com.cgq.mapper.PageTaskMapper;
+import com.cgq.mapper.ResourceMapper;
+import com.cgq.mapper.TaskMapper;
+import com.cgq.model.Page;
+import com.cgq.model.PageTask;
+import com.cgq.model.Resource;
+import com.cgq.model.Task;
+import com.cgq.service.PageService;
+import com.cgq.service.PageTaskService;
+import com.cgq.service.ResourceService;
+import com.cgq.service.StudentTaskPageHistoryService;
+import com.cgq.service.TaskService;
+import com.cgq.util.CheckUtil;
+import com.cgq.util.DateProcess;
+import com.cgq.util.ResultCode;
+
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
+
+@Service
+public class TaskServiceImpl implements TaskService {
+
+	@Autowired
+	private TaskMapper taskMapper;
+
+	@Autowired
+	private PageMapper pageMapper;
+
+	@Autowired
+	private ResourceMapper resourceMapper;
+	
+	@Autowired
+	private PageTaskMapper pagetaskMapper;
+
+	@Autowired
+	private PageTaskService pagetaskService;
+	@Autowired
+	private PageService pageService;
+	@Autowired
+	private ResourceService resourceService;
+	@Autowired
+	private StudentTaskPageHistoryService studentTaskPageHistoryService;
+
+	@Override
+	public List<Task> listAll() {
+		// TODO Auto-generated method stub
+		return taskMapper.selectAll();
+	}
+
+	@Override
+	public Task queryTaskInfo(int id) {
+		// TODO Auto-generated method stub
+		Task task = taskMapper.selectByPrimaryKey(id);
+		return task;
+	}
+
+	@Override
+	public Resource getLiveResource(Task task, Integer index) {
+		// TODO Auto-generated method stub
+		for (Page page : getPagesWithIndexByTask(task)) {
+			if (page.getPageindex().equals(index)) {
+				return resourceMapper.selectByPrimaryKey(Integer.valueOf(page.getResourceid()));
+			}
+		}
+		return null;
+	}
+
+	private List<Page> getPagesWithIndexByTask(Task task){
+		return pageMapper.queryListByTaskid(task.getId());
+	}
+	
+	@Override
+	public List<Task> listEffectiveTask() {
+		// TODO Auto-generated method stub
+		Example record = new Example(Task.class);
+		Criteria criteria = record.createCriteria();
+		criteria.andEqualTo("status", ResultCode.ISEFFECTIVE);
+		return taskMapper.selectByExample(record);
+	}
+
+	public Task queryTaskInfoForOnline(Integer taskid) {
+		Task task = taskMapper.selectByPrimaryKey(taskid);
+		return CheckUtil.isEmpty(task) ? null : task;
+	}
+
+	public List<Page> queryTaskPageForOnline(Integer taskid, Integer userId, Integer index) throws Exception {
+		// 1. 获取任务详情
+		PageTask pt = pagetaskService.queryByPageId(taskid, index);
+		if (CheckUtil.notEmpty(pt)) {
+			// 2.获取任务与page关系，从而获取page
+			Integer status = pt.getStatus();
+			String pageId = pt.getTpageId();
+			// 3.获取当前页面对应的所有元素
+			List<Page> pages = pageService.queryPageByPageid(pageId);
+			if (CheckUtil.isEmpty(pages))
+				throw new Exception("查询当前任务页面错误！");
+			// 4.获取当前页面page元素资源
+			for (Page p : pages) {
+					// 针对 静态page 元素
+					if (CheckUtil.notEmpty(p.getResourceid())) {
+						Resource r = resourceService.getResourceById(Integer.valueOf(p.getResourceid()));
+						p.setResource(r);
+				}
+			}
+			return CheckUtil.notEmpty(pages) ? pages : null;
+		} else {
+			throw new Exception("无法关联与任务和页面   taskId ==" + taskid);
+		}
+	}
+
+	@Override
+	public int addLiveTask(Integer pdfresourceid, String taskname,int width,int height) throws IOException, PdfException {
+		// TODO Auto-generated method stub
+		//存储PDF文件
+		//List<Integer> pdfResourceIDList = resourceService.uploadFile(request, new Integer(0));
+		//将PDF转为图片并保存
+		List<Integer> imgResourceIDList  = resourceService.savePDFToImg(pdfresourceid,new Integer(0),width,height);
+		//新建任务
+		Task task= new Task();
+		task.setCountStep(imgResourceIDList.size());
+		task.setCreateTime(DateProcess.getSysTime());
+		task.setStatus(1);
+		task.setTaskName(taskname);
+		task.setTaskType(ResultCode.TASK_TYPE_LIVE.toString());
+		int result = taskMapper.insert(task);
+		Integer taskid = task.getId();
+		//新建page
+		String pageid = UUID.randomUUID().toString();
+		String pagename = "直播课件";
+		List<Integer> pageids = new ArrayList<>();
+		for(Integer resourceid : imgResourceIDList){
+			Page page = new Page();
+			page.setPageid(pageid);
+			page.setResourceid(resourceid+"");
+			page.setDescription("直播课件");
+			page.setPagename(pagename);
+			page.setStatus(0);//是否为动态资源 0不是
+			page.setIsAnswer(0);
+			pageMapper.insert(page);
+			pageids.add(page.getId());
+		}
+		//关联page与task
+		int index = 1;//页序
+		for(Integer t_page_id : pageids){
+			PageTask pagetask = new PageTask();
+			pagetask.setPageIndex(index);
+			pagetask.setStatus(0);//是否为动态资源 0不是
+			pagetask.setTaskName(taskname);
+			pagetask.setTpageId(String.valueOf(t_page_id));
+			pagetask.setTtaskId(taskid);
+			pagetaskMapper.insert(pagetask);
+		}
+		return result;
+	}
+
+	@Override
+	public void saveTask(Task task) throws Exception {
+		taskMapper.insertSelective(task);
+	}
+
+}

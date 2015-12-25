@@ -1,0 +1,27 @@
+package com.cgq.model;
+
+public class Group {
+	private String groupid;
+	private int groupscore;// 小组积分
+	private int status;// 小组状态 0 无状态 1答题
+	public String getGroupid() {
+		return groupid;
+	}
+	public void setGroupid(String groupid) {
+		this.groupid = groupid;
+	}
+	public int getGroupscore() {
+		return groupscore;
+	}
+	public void setGroupscore(int groupscore) {
+		this.groupscore = groupscore;
+	}
+	public int getStatus() {
+		return status;
+	}
+	public void setStatus(int status) {
+		this.status = status;
+	}
+	
+	
+}
